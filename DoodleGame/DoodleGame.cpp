@@ -2,8 +2,10 @@
 #include <iostream>
 #include <string>
 #include <stdexcept>
+#include <filesystem>
 
 using namespace std;
+namespace fs = std::filesystem;
 
 class MyFramework : public Framework {
 
@@ -25,24 +27,36 @@ public:
 		COUNT
 	};
 
-	struct {
+	struct Hero{
 		Sprite* sprite = NULL;
 
 		int cord_x = 0;
 		int cord_y = 0;
+
+		int sprite_x = 0;
+		int sprite_y = 0;
+
+		int teleportOffset = 0;
 
 		HeroMoveState moveState = HeroMoveState::IDLE;
 		int horizontalMovementSpeed = 2;
 		bool leftPressed = false;
 		bool rightPressed = false;
 
+		int verticalBasicMovementSpeed = -8;
+		int verticalCurrentMovementSpeed = 0;
+		int verticalBasicTickTimer = 8;
+		int verticalCurrentTickTimer = 0;
+
 		AbilityType activeAbility = AbilityType::NONE;
 		int activeAbilityTimer = 0;
+
 	}mainHero;
 
 	struct {
 		int platformDeleted = 0;
 		int traveledDistance = 0;
+		int bottomOffset = 100;
 	}worldParams;
 
 	struct Platform
@@ -84,16 +98,31 @@ public:
 		fullscreen = false;
 	}
 
+	char* absPath(fs::path relativePath)
+	{
+		fs::path resultPath = fs::absolute(relativePath);
+		string str = resultPath.string();
+
+		int len = str.size();
+
+		char* resultChar = new char[len + 1];
+		std::copy(str.begin(), str.end(), resultChar);
+		resultChar[len] = '\0';
+		cout << "absPath(" << relativePath << ") execution result: " << resultChar << endl;
+		return resultChar;
+	}
+
 	virtual bool Init()
 	{
-		//mainHero.sprite = createSprite("hero.png");
-		mainHero.sprite = createSprite("D:\\DoodleGame\\x64\\Debug\\data\\hero.png");
-		getScreenSize(mainHero.cord_x, mainHero.cord_y);
-		int tmpW, tmpH;
-		getSpriteSize(mainHero.sprite, tmpW, tmpH);
-		mainHero.cord_x /= 2;
-		mainHero.cord_x -= tmpW / 2;
-		mainHero.cord_y -= tmpH + 100;
+		//main hero sprite and params init
+		mainHero.sprite = createSprite(absPath(".\\data\\hero.png"));
+		getSpriteSize(mainHero.sprite, mainHero.sprite_x, mainHero.sprite_y);
+		mainHero.teleportOffset = mainHero.sprite_x - 2;
+
+		//center sprite in window
+		mainHero.cord_x = WindowWidth / 2 - mainHero.sprite_x / 2;
+		mainHero.cord_y = WindowHeight - mainHero.sprite_y - worldParams.bottomOffset;
+		
 		return true;
 	}
 
@@ -104,9 +133,11 @@ public:
 
 	virtual bool Tick()
 	{
+		//draw
 		drawTestBackground();
-		drawSprite(mainHero.sprite, mainHero.cord_x, mainHero.cord_y);
+		drawSprite(mainHero.sprite, mainHero.cord_x, mainHero.cord_y += mainHero.verticalCurrentMovementSpeed);
 
+		//move
 		switch (mainHero.moveState)
 		{
 		case MyFramework::HeroMoveState::LEFT:
@@ -122,6 +153,28 @@ public:
 		default:
 			break;
 		}
+
+		//jump tick logic
+		if (--mainHero.verticalCurrentTickTimer == 0)
+		{
+			mainHero.verticalCurrentMovementSpeed++;
+			mainHero.verticalCurrentTickTimer = mainHero.verticalBasicTickTimer;
+		}
+
+		//teleport on edge touch
+		if (mainHero.cord_x < 0 - mainHero.teleportOffset)
+		{
+			mainHero.cord_x = WindowWidth - (mainHero.sprite_x - mainHero.teleportOffset);
+		}
+		else if (mainHero.cord_x > WindowWidth - (mainHero.sprite_x - mainHero.teleportOffset))
+		{
+			mainHero.cord_x = 0 - mainHero.teleportOffset;
+		}
+
+		//player collision
+
+		
+
 		return false;
 	}
 
@@ -133,6 +186,12 @@ public:
 	virtual void onMouseButtonClick(FRMouseButton button, bool isReleased)
 	{
 
+	}
+
+	void heroJump()
+	{
+		mainHero.verticalCurrentTickTimer = mainHero.verticalBasicTickTimer;
+		mainHero.verticalCurrentMovementSpeed = mainHero.verticalBasicMovementSpeed;
 	}
 
 	virtual void onKeyPressed(FRKey k)
@@ -156,6 +215,7 @@ public:
 		case FRKey::DOWN:
 			break;
 		case FRKey::UP:
+			heroJump();
 			break;
 		case FRKey::COUNT:
 			break;
