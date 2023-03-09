@@ -1,3 +1,3 @@
 ﻿  DoodleGame.cpp
-D:\DoodleGame\DoodleGame\DoodleGame.cpp(106,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\DoodleGame\DoodleGame\DoodleGame.cpp(164,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
   DoodleGame.vcxproj -> D:\DoodleGame\x64\Debug\DoodleGame.exe
