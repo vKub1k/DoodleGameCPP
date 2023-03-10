@@ -6,12 +6,14 @@
 #include <filesystem>
 #include <list> 
 #include <random>
+#include <math.h>
+#include <cmath>
 
 
 using namespace std;
 namespace fs = std::filesystem;
 
-class MyFramework : public Framework {
+class Game : public Framework {
 
 public:
 	int WindowWidth, WindowHeight;
@@ -43,18 +45,30 @@ public:
 		ENEMY,
 		COUNT
 	};
+
+	struct Assets {
+		Sprite* spriteHero;
+		Sprite* spritePlarfotmReg;
+		Sprite* spritePlarfotmBoost;
+		Sprite* spritePlarfotmEnemy;
+		Sprite* spriteNpc;
+		Sprite* spriteAmmo;
+	} res;
+
 	struct Ammo {
-		int cord_x = 0;
-		int cord_y = 0;
+		float cord_x = 0;
+		float cord_y = 0;
 		int sprite_x = 0;
 		int sprite_y = 0;
 
 		Sprite* sprite = NULL;
 
-		int speed_x = 0;
-		int speed_y = 0;
+		float unit_vector_x = 0;
+		float unit_vector_y = 0;
 
-		int basicSpeed = 12;
+		float speed_x = 0;
+		float speed_y = 0;
+		int basicSpeed = 4;
 	};
 
 	struct Hero{
@@ -118,12 +132,14 @@ public:
 		Sprite* sprite{};
 	};
 	
-	struct Monster
+	struct Enemy
 	{
-		bool isAlive = true;
-		int cord_x;
-		int cord_y;
+		int cord_x = 0;
+		int cord_y = 0;
+
 		Sprite* sprite = NULL;
+		int sprite_x = 0;
+		int sprite_y = 0;
 	};
 
 	struct Ability
@@ -136,7 +152,7 @@ public:
 	};
 	
 
-	MyFramework(int windowWidth, int windowHeight)
+	Game(int windowWidth, int windowHeight)
 	{
 		WindowWidth = windowWidth;
 		WindowHeight = windowHeight;
@@ -147,7 +163,10 @@ public:
 	list<Platform>::iterator PlatformsItr;
 
 	list<Ammo> Ammos;
-	list<Ammo>::iterator AmmoItr;
+	list<Ammo>::iterator AmmosItr;
+
+	list<Enemy> Enemys;
+	list<Enemy>::iterator EnemysItr;
 
 	virtual void PreInit(int& width, int& height, bool& fullscreen)
 	{
@@ -243,15 +262,43 @@ public:
 				drawSprite(a.sprite, a.cord_x, a.cord_y);
 			}
 		}
+		//render enemy
+		if (Enemys.size() > 0)
+		{
+			for (Enemy& e : Enemys)
+			{
+				drawSprite(e.sprite, e.cord_x, e.cord_y);
+			}
+		}
 		//render hero
 		drawSprite(mainHero.sprite, mainHero.cord_x, mainHero.cord_y);
 
 		//vertical logic
 		if (mainHero.cord_y <= worldParams.cameraYLimit && mainHero.verticalCurrentMovementSpeed < 0)
 		{
+			//world scroll
+			worldParams.traveledDistance -= mainHero.verticalCurrentMovementSpeed;
+			Log(worldParams.traveledDistance);
+			//scroll platforms
 			for (Platform &p : Platforms)
 			{
 				p.cord_y -= mainHero.verticalCurrentMovementSpeed;
+			}
+			//scroll ammo
+			if (Ammos.size() > 0)
+			{
+				for (Ammo& a : Ammos)
+				{
+					a.cord_y -= mainHero.verticalCurrentMovementSpeed;
+				}
+			}
+			//scroll enemys
+			if (Enemys.size() > 0)
+			{
+				for (Enemy& e : Enemys)
+				{
+					e.cord_y -= mainHero.verticalCurrentMovementSpeed;
+				}
 			}
 		}
 		else
@@ -262,15 +309,15 @@ public:
 		//horizontal logic
 		switch (mainHero.moveState)
 		{
-		case MyFramework::HeroMoveState::LEFT:
+		case Game::HeroMoveState::LEFT:
 			mainHero.cord_x -= mainHero.horizontalMovementSpeed;
 			break;
-		case MyFramework::HeroMoveState::IDLE:
+		case Game::HeroMoveState::IDLE:
 			break;
-		case MyFramework::HeroMoveState::RIGHT:
+		case Game::HeroMoveState::RIGHT:
 			mainHero.cord_x += mainHero.horizontalMovementSpeed;
 			break;
-		case MyFramework::HeroMoveState::COUNT:
+		case Game::HeroMoveState::COUNT:
 			break;
 		default:
 			break;
@@ -300,6 +347,23 @@ public:
 			{
 				a.cord_x += a.speed_x;
 				a.cord_y += a.speed_y;
+			}
+		}
+
+		//ammo teleport on edge touch
+		if (Ammos.size() > 0)
+		{
+			for (Ammo& a : Ammos)
+			{
+				int a_x = round(a.cord_x);
+				if (a_x < 0 - a.sprite_x)
+				{
+					a.cord_x = WindowWidth;
+				}
+				else if (WindowWidth < a_x)
+				{
+					a.cord_x = 0 - a.sprite_x;
+				}
 			}
 		}
 
@@ -333,7 +397,6 @@ public:
 				{
 					Platforms.erase(PlatformsItr);
 					worldParams.platformDeleted++;
-					PlatformsItr;
 					spawnPlatform();
 					Log("P destr");
 					Log(worldParams.platformDeleted);
@@ -343,6 +406,80 @@ public:
 				{
 					break;
 				}
+			}
+		}
+
+		//platform x garbage collector collision and spawning new platforms
+		if (Ammos.size() > 0)
+		{
+			AmmosItr = Ammos.begin();
+			for (AmmosItr; AmmosItr != Ammos.end(); AmmosItr++)
+			{
+				if (*&AmmosItr->cord_y > WindowHeight || *&AmmosItr->cord_y < 0 - *&AmmosItr->sprite_y)
+				{
+					Ammos.erase(AmmosItr);
+					Log("Ammo destr");
+					break;
+				}
+				else
+				{
+					break;
+				}
+			}
+		}
+
+		//platform x garbage collector collision and spawning new platforms
+		if (Enemys.size() > 0)
+		{
+			EnemysItr = Enemys.begin();
+			for (EnemysItr; EnemysItr != Enemys.end(); EnemysItr++)
+			{
+				if (*&EnemysItr->cord_y > WindowHeight)
+				{
+					Enemys.erase(EnemysItr);
+					Log("Ammo destr");
+					break;
+				}
+				else
+				{
+					break;
+				}
+			}
+		}
+
+		//enemy x ammo collision and enemy kill
+		if (Enemys.size() > 0 && Ammos.size() > 0)
+		{
+			EnemysItr = Enemys.begin();
+			AmmosItr = Ammos.begin();
+			bool flag = false;
+			for (EnemysItr; EnemysItr != Enemys.end(); EnemysItr++)
+			{
+				cout << *&EnemysItr->cord_y << endl;
+				for (AmmosItr; AmmosItr != Ammos.end(); AmmosItr++)
+				{
+					cout << isRectCollision(
+						*&EnemysItr->cord_x, *&EnemysItr->cord_y, *&EnemysItr->sprite_x, *&EnemysItr->sprite_y,
+						*&AmmosItr->cord_x, *&AmmosItr->cord_y, *&AmmosItr->sprite_x, *&AmmosItr->sprite_y
+					);
+					if (isRectCollision(
+						*&EnemysItr->cord_x, *&EnemysItr->cord_y, *&EnemysItr->sprite_x, *&EnemysItr->sprite_y,
+						*&AmmosItr->cord_x, *&AmmosItr->cord_y, *&AmmosItr->sprite_x, *&AmmosItr->sprite_y
+					))
+					{
+						flag = true;
+						break;
+					}
+				}
+				if (flag)
+				{
+					break;
+				}
+			}
+			if (flag)
+			{
+				Enemys.erase(EnemysItr);
+				Ammos.erase(AmmosItr);
 			}
 		}
 		
@@ -372,7 +509,10 @@ public:
 		switch (button)
 		{
 		case FRMouseButton::LEFT:
-			spawnAmmo();
+			if (!isReleased)
+			{
+				spawnAmmo();
+			}
 			break;
 		case FRMouseButton::MIDDLE:
 			break;
@@ -381,6 +521,21 @@ public:
 		default:
 			break;
 		}
+	}
+
+	void spawnEnemy(int x, int y)
+	{
+		Enemy dummyEnemy;
+
+		dummyEnemy.sprite = createSprite(absPath(".\\data\\npc.png"));
+		getSpriteSize(dummyEnemy.sprite, dummyEnemy.sprite_x, dummyEnemy.sprite_y);
+
+		//center enemy on platform
+		dummyEnemy.cord_x = x + 5;
+		dummyEnemy.cord_y = y - dummyEnemy.sprite_y - 5;
+
+		Enemys.push_back(dummyEnemy);
+		Log("Enemy spawned.");
 	}
 
 	void spawnPlatform(bool isRandomPosition = true, int x = 0, int y = 0,
@@ -393,7 +548,7 @@ public:
 		{
 			PlatformsItr = Platforms.end();
 			PlatformsItr--;
-			dummyPlatform.id = PlatformsItr->id + 1;
+			dummyPlatform.id = PlatformsItr->id++;
 		}
 		else
 		{
@@ -430,6 +585,7 @@ public:
 			else
 			{
 				dummyPlatform.type = PlatformType::ENEMY;
+				spawnEnemy(dummyPlatform.cord_x, dummyPlatform.cord_y);
 			}
 		}
 		else
@@ -448,7 +604,7 @@ public:
 			dummyPlatform.jumpBoost = -15;
 			break;
 		case PlatformType::ENEMY:
-			dummyPlatform.sprite = createSprite(absPath(".\\data\\p_swamp.png"));
+			dummyPlatform.sprite = createSprite(absPath(".\\data\\p_enemy.png"));
 			dummyPlatform.jumpBoost = -8;
 			break;
 		default:
@@ -463,11 +619,18 @@ public:
 	void spawnAmmo()
 	{
 		Ammo ammoDummy;
+		ammoDummy.sprite = createSprite(absPath(".\\data\\ammo.png"));
+
 		ammoDummy.cord_x = mainHero.cord_x + mainHero.bulletOffset;
 		ammoDummy.cord_y = mainHero.cord_y + mainHero.bulletOffset;
-		ammoDummy.speed_x = (mainHero.mouse_x - ammoDummy.cord_x) / ammoDummy.basicSpeed;
-		ammoDummy.speed_y = (mainHero.mouse_y - ammoDummy.cord_y) / ammoDummy.basicSpeed;
-		ammoDummy.sprite = createSprite(absPath(".\\data\\ammo.png"));
+		float v2x = (mainHero.mouse_x - ammoDummy.cord_x);
+		float v2y = (mainHero.mouse_y - ammoDummy.cord_y);
+		float magn = sqrt((v2x * v2x) + (v2y * v2y));
+		ammoDummy.unit_vector_x = v2x / magn;
+		ammoDummy.unit_vector_y = v2y / magn;
+		ammoDummy.speed_x = ammoDummy.unit_vector_x * ammoDummy.basicSpeed;
+		ammoDummy.speed_y = ammoDummy.unit_vector_y * ammoDummy.basicSpeed;
+
 		getSpriteSize(ammoDummy.sprite, ammoDummy.sprite_x, ammoDummy.sprite_y);
 
 		Ammos.push_back(ammoDummy);
@@ -611,7 +774,7 @@ int main(int argc, char* argv[]) // game -window 800x600
 
 	while (true)
 	{
-		run(new MyFramework(w, h));
+		run(new Game(w, h));
 	}
 
 	return 0;
