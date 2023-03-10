@@ -8,148 +8,31 @@
 #include <random>
 #include <math.h>
 #include <cmath>
+#include <chrono>
+#include <thread>
+
+#include "Timer.h"
+#include "MyStructures.h"
+#include "Hero.h"
+#include "Enums.h"
 
 
 using namespace std;
+using namespace std::this_thread;
+using namespace std::chrono;
+
 namespace fs = std::filesystem;
 
 class Game : public Framework {
 
 public:
 	int WindowWidth, WindowHeight;
-	struct GarbageCollector {
-		int x1;
-		int y1;
-		int w1;
-		int h1;
-	}garbageCollector{};
-
-	enum class HeroMoveState {
-		LEFT,
-		IDLE,
-		RIGHT,
-		COUNT
-	};
-
-	enum class AbilityType {
-		NONE,
-		AUTO_SHOOT,
-		HORIZONTAL_SPEED_UP,
-		JETPACK,
-		COUNT
-	};
-
-	enum class PlatformType {
-		REGULAR,
-		BOOST,
-		ENEMY,
-		COUNT
-	};
-
-	struct Assets {
-		Sprite* spriteHero;
-		Sprite* spritePlarfotmReg;
-		Sprite* spritePlarfotmBoost;
-		Sprite* spritePlarfotmEnemy;
-		Sprite* spriteNpc;
-		Sprite* spriteAmmo;
-	} res;
-
-	struct Ammo {
-		float cord_x = 0;
-		float cord_y = 0;
-		int sprite_x = 0;
-		int sprite_y = 0;
-
-		Sprite* sprite = NULL;
-
-		float unit_vector_x = 0;
-		float unit_vector_y = 0;
-
-		float speed_x = 0;
-		float speed_y = 0;
-		int basicSpeed = 4;
-	};
-
-	struct Hero{
-		Sprite* sprite = NULL;
-
-		int cord_x = 0;
-		int cord_y = 0;
-
-		int sprite_x = 0;
-		int sprite_y = 0;
-
-		const int collisionOffset_y = 75;
-		bool isCollisionOn = true;
-
-		int teleportOffset = 0;
-
-		HeroMoveState moveState = HeroMoveState::IDLE;
-		int horizontalMovementSpeed = 3;
-		bool leftPressed = false;
-		bool rightPressed = false;
-
-		int verticalBasicMovementSpeed = -8;
-		int verticalCurrentMovementSpeed = 0;
-		int verticalBasicTickTimer = 8;
-		int verticalCurrentTickTimer = 0;
-
-		AbilityType activeAbility = AbilityType::NONE;
-		int activeAbilityTimer = 0;
-
-		int biggestPlatformId = -1;
-
-		int mouse_x = 0;
-		int mouse_y = 0;
-		int mouse_rel_x = 0;
-		int mouse_rel_y = 0;
-
-		int bulletOffset = 0;
-	}mainHero;
-
-	struct WorldParams{
-		int platformDeleted = 0;
-		int traveledDistance = 0;
-
-		int bottomOffset = 100;
-		int cameraYLimit = 200;
-
-		bool doExit = false;
-	}worldParams;
-
-	struct Platform
-	{
-		int id = NULL;
-
-		PlatformType type = PlatformType::REGULAR;
-		int jumpBoost = 8;
-
-		int cord_x = 0;
-		int cord_y = 0;
-		const int sprite_x = 80;
-		const int sprite_y = 15;
-		Sprite* sprite{};
-	};
+	GarbageCollector garbageCollector{};
 	
-	struct Enemy
-	{
-		int cord_x = 0;
-		int cord_y = 0;
-
-		Sprite* sprite = NULL;
-		int sprite_x = 0;
-		int sprite_y = 0;
-	};
-
-	struct Ability
-	{
-		AbilityType type;
-		bool isAlive = true;
-		int cord_x;
-		int cord_y;
-		Sprite* sprite = NULL;
-	};
+	Assets res;
+	
+	Hero mainHero;
+	WorldParams worldParams;
 	
 
 	Game(int windowWidth, int windowHeight)
@@ -167,6 +50,9 @@ public:
 
 	list<Enemy> Enemys;
 	list<Enemy>::iterator EnemysItr;
+
+	list<Ability> Abilitys;
+	list<Ability>::iterator AbilitysItr;
 
 	virtual void PreInit(int& width, int& height, bool& fullscreen)
 	{
@@ -237,6 +123,11 @@ public:
 
 	virtual void Close()
 	{
+		sleep_for(seconds(4));
+	}
+
+	void MyClose()
+	{
 		worldParams.doExit = true;
 	}
 
@@ -245,12 +136,12 @@ public:
 		return (x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2);
 	}
 
-	virtual bool Tick()
+	void Render()
 	{
 		//render
 		drawTestBackground();
 		//render platforms
-		for (Platform &p : Platforms)
+		for (Platform& p : Platforms)
 		{
 			drawSprite(p.sprite, p.cord_x, p.cord_y);
 		}
@@ -272,13 +163,20 @@ public:
 		}
 		//render hero
 		drawSprite(mainHero.sprite, mainHero.cord_x, mainHero.cord_y);
+	}
 
+	virtual bool Tick()
+	{
+		if (false)
+		{
+
+		}
 		//vertical logic
 		if (mainHero.cord_y <= worldParams.cameraYLimit && mainHero.verticalCurrentMovementSpeed < 0)
 		{
 			//world scroll
 			worldParams.traveledDistance -= mainHero.verticalCurrentMovementSpeed;
-			Log(worldParams.traveledDistance);
+			//TODO: scoreboard
 			//scroll platforms
 			for (Platform &p : Platforms)
 			{
@@ -309,15 +207,15 @@ public:
 		//horizontal logic
 		switch (mainHero.moveState)
 		{
-		case Game::HeroMoveState::LEFT:
+		case HeroMoveState::LEFT:
 			mainHero.cord_x -= mainHero.horizontalMovementSpeed;
 			break;
-		case Game::HeroMoveState::IDLE:
+		case HeroMoveState::IDLE:
 			break;
-		case Game::HeroMoveState::RIGHT:
+		case HeroMoveState::RIGHT:
 			mainHero.cord_x += mainHero.horizontalMovementSpeed;
 			break;
-		case Game::HeroMoveState::COUNT:
+		case HeroMoveState::COUNT:
 			break;
 		default:
 			break;
@@ -378,11 +276,8 @@ public:
 					if (mainHero.biggestPlatformId < p.id)
 					{
 						mainHero.biggestPlatformId = p.id;
-						Log("New ID: ");
-						Log(mainHero.biggestPlatformId);
 					}
 					heroJump(p.jumpBoost);
-					Log("Do jump!");
 				}
 			}
 		}
@@ -398,7 +293,7 @@ public:
 					Platforms.erase(PlatformsItr);
 					worldParams.platformDeleted++;
 					spawnPlatform();
-					Log("P destr");
+					//TODO: scoreboard for deleted platforms
 					Log(worldParams.platformDeleted);
 					break;
 				}
@@ -418,11 +313,6 @@ public:
 				if (*&AmmosItr->cord_y > WindowHeight || *&AmmosItr->cord_y < 0 - *&AmmosItr->sprite_y)
 				{
 					Ammos.erase(AmmosItr);
-					Log("Ammo destr");
-					break;
-				}
-				else
-				{
 					break;
 				}
 			}
@@ -437,7 +327,6 @@ public:
 				if (*&EnemysItr->cord_y > WindowHeight)
 				{
 					Enemys.erase(EnemysItr);
-					Log("Ammo destr");
 					break;
 				}
 				else
@@ -451,17 +340,12 @@ public:
 		if (Enemys.size() > 0 && Ammos.size() > 0)
 		{
 			EnemysItr = Enemys.begin();
-			AmmosItr = Ammos.begin();
 			bool flag = false;
 			for (EnemysItr; EnemysItr != Enemys.end(); EnemysItr++)
 			{
-				cout << *&EnemysItr->cord_y << endl;
+				AmmosItr = Ammos.begin();
 				for (AmmosItr; AmmosItr != Ammos.end(); AmmosItr++)
 				{
-					cout << isRectCollision(
-						*&EnemysItr->cord_x, *&EnemysItr->cord_y, *&EnemysItr->sprite_x, *&EnemysItr->sprite_y,
-						*&AmmosItr->cord_x, *&AmmosItr->cord_y, *&AmmosItr->sprite_x, *&AmmosItr->sprite_y
-					);
 					if (isRectCollision(
 						*&EnemysItr->cord_x, *&EnemysItr->cord_y, *&EnemysItr->sprite_x, *&EnemysItr->sprite_y,
 						*&AmmosItr->cord_x, *&AmmosItr->cord_y, *&AmmosItr->sprite_x, *&AmmosItr->sprite_y
@@ -482,6 +366,40 @@ public:
 				Ammos.erase(AmmosItr);
 			}
 		}
+
+		//render all sprites
+		Render();
+
+		//all close cases
+		//player x enemy top collision and enemy kill
+		if (mainHero.verticalCurrentMovementSpeed >= 0 && mainHero.isCollisionOn)
+		{
+			EnemysItr = Enemys.begin();
+			for (EnemysItr; EnemysItr != Enemys.end(); EnemysItr++)
+			{
+				if (isRectCollision(*&EnemysItr->cord_x, *&EnemysItr->cord_y, *&EnemysItr->sprite_x, *&EnemysItr->sprite_y,
+					mainHero.cord_x, mainHero.cord_y + mainHero.collisionOffset_y, mainHero.sprite_x, mainHero.sprite_y - mainHero.collisionOffset_y))
+				{
+					Enemys.erase(EnemysItr);
+					heroJump(-14);
+					break;
+				}
+			}
+		}
+		//player x enemy collision and game end
+		else if (!Enemys.empty())
+		{
+			for (Enemy& e : Enemys)
+			{
+				if (isRectCollision(
+					e.cord_x, e.cord_y, e.sprite_x, e.sprite_y,
+					mainHero.cord_x, mainHero.cord_y, mainHero.sprite_x, mainHero.sprite_y
+				))
+				{
+					MyClose();
+				}
+			}
+		}
 		
 		//player x garbage collector collision and game end
 		if (isRectCollision(
@@ -490,7 +408,7 @@ public:
 			mainHero.sprite_x, mainHero.sprite_y - mainHero.collisionOffset_y
 		))
 		{
-			worldParams.doExit = true;
+			MyClose();
 		}
 
 		return worldParams.doExit;
@@ -535,7 +453,7 @@ public:
 		dummyEnemy.cord_y = y - dummyEnemy.sprite_y - 5;
 
 		Enemys.push_back(dummyEnemy);
-		Log("Enemy spawned.");
+
 	}
 
 	void spawnPlatform(bool isRandomPosition = true, int x = 0, int y = 0,
@@ -613,7 +531,6 @@ public:
 		}
 
 		Platforms.push_back(dummyPlatform);
-		Log("Platform spawned.");
 	}
 
 	void spawnAmmo()
@@ -634,7 +551,6 @@ public:
 		getSpriteSize(ammoDummy.sprite, ammoDummy.sprite_x, ammoDummy.sprite_y);
 
 		Ammos.push_back(ammoDummy);
-		Log("Ammo spawned.");
 	}
 
 	void startWorldCtr()
