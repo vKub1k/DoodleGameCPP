@@ -32,13 +32,6 @@ public:
 	Hero mainHero;
 	WorldParams worldParams;
 	Background bg;
-	
-
-	Game(int windowWidth, int windowHeight)
-	{
-		WindowWidth = windowWidth;
-		WindowHeight = windowHeight;
-	}
 
 	//auto it = std::find(l.begin(), l.end(), 16);
 	list<Platform> Platforms;
@@ -52,12 +45,19 @@ public:
 
 	list<Ability> Abilitys;
 	list<Ability>::iterator AbilitysItr;
+	
+
+	Game(int windowWidth, int windowHeight)
+	{
+		WindowWidth = windowWidth;
+		WindowHeight = windowHeight;
+	}
 
 	virtual void PreInit(int& width, int& height, bool& fullscreen)
 	{
 		width = WindowWidth;
 		height = WindowHeight;
-		fullscreen = true;
+		fullscreen = false;
 	}
 
 	char* absPath(fs::path relativePath)
@@ -442,13 +442,11 @@ public:
 					switch (mainHero.activeAbility)
 					{
 					case AbilityType::AUTO_SHOOT:
-						Log("Start");
 						mainHero.abilityTimer.setFunc([&]() {
 							if (!mainHero.abilityFirstRun)
 							{
 								mainHero.activeAbility = AbilityType::COUNT;
 								mainHero.abilityFirstRun = true;
-								Log("End");
 								mainHero.abilityTimer.stop();
 								}
 							else
@@ -654,7 +652,6 @@ public:
 		Ability dummyAbility;
 		int platformId = rand() % Platforms.size();
 		PlatformsItr = Platforms.begin();
-		Log(platformId);
 		for (int i = 0; i < platformId; i++)
 		{
 			PlatformsItr++;
@@ -667,8 +664,6 @@ public:
 		dummyAbility.sprite = res.abilities[(int)AbilityType::AUTO_SHOOT];
 
 		Abilitys.push_back(dummyAbility);
-
-		Log("Ab spawned.");
 	}
 
 	void spawnPlatform(bool isRandomPosition = true, int x = 0, int y = 0,

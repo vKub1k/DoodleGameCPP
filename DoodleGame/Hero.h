@@ -39,7 +39,7 @@ struct Hero {
 	int bulletOffset = 0;
 
 	unsigned int jumpCounter = 0;
-	int jumpsToSpawnAbility = 50;
+	int jumpsToSpawnAbility = 10;
 
 	AbilityType activeAbility = AbilityType::COUNT;
 	Timer abilityTimer{};
