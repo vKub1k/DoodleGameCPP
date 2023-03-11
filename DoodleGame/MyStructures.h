@@ -3,12 +3,12 @@
 #include "Enums.h"
 
 struct Assets {
-	Sprite* spriteHero;
 	Sprite* spritePlarfotmReg;
 	Sprite* spritePlarfotmBoost;
 	Sprite* spritePlarfotmEnemy;
 	Sprite* spriteNpc;
 	Sprite* spriteAmmo;
+	Sprite** numbers = new Sprite * [10];
 };
 
 struct GarbageCollector {

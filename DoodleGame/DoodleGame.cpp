@@ -102,6 +102,23 @@ public:
 		garbageCollector.w1 = WindowWidth;
 		garbageCollector.h1 = 100;
 
+		//numbers sprite init
+		for (int i = 0; i < 10; i++)
+		{
+			string relativePath = ".\\data\\nums\\";
+			relativePath += to_string(i);
+			relativePath += ".png";
+			res.numbers[i] = createSprite(absPath(relativePath));
+		}
+		//res load npc sprite
+		res.spriteNpc = createSprite(absPath(".\\data\\npc.png"));
+		//res load platforms sprite
+		res.spritePlarfotmReg = createSprite(absPath(".\\data\\p_regular.png"));
+		res.spritePlarfotmBoost = createSprite(absPath(".\\data\\p_boost.png"));
+		res.spritePlarfotmEnemy = createSprite(absPath(".\\data\\p_enemy.png"));
+		//res load ammo sprite
+		res.spriteAmmo = createSprite(absPath(".\\data\\ammo.png"));
+
 		//set seed for random from current time
 		srand((unsigned)time(NULL));
 
@@ -445,7 +462,7 @@ public:
 	{
 		Enemy dummyEnemy;
 
-		dummyEnemy.sprite = createSprite(absPath(".\\data\\npc.png"));
+		dummyEnemy.sprite = res.spriteNpc;
 		getSpriteSize(dummyEnemy.sprite, dummyEnemy.sprite_x, dummyEnemy.sprite_y);
 
 		//center enemy on platform
@@ -514,15 +531,15 @@ public:
 		switch (dummyPlatform.type)
 		{
 		case PlatformType::REGULAR:
-			dummyPlatform.sprite = createSprite(absPath(".\\data\\p_regular.png"));
+			dummyPlatform.sprite = res.spritePlarfotmReg;
 			dummyPlatform.jumpBoost = -8;
 			break;
 		case PlatformType::BOOST:
-			dummyPlatform.sprite = createSprite(absPath(".\\data\\p_boost.png"));
+			dummyPlatform.sprite = res.spritePlarfotmBoost;
 			dummyPlatform.jumpBoost = -15;
 			break;
 		case PlatformType::ENEMY:
-			dummyPlatform.sprite = createSprite(absPath(".\\data\\p_enemy.png"));
+			dummyPlatform.sprite = res.spritePlarfotmEnemy;
 			dummyPlatform.jumpBoost = -8;
 			break;
 		default:
@@ -536,7 +553,7 @@ public:
 	void spawnAmmo()
 	{
 		Ammo ammoDummy;
-		ammoDummy.sprite = createSprite(absPath(".\\data\\ammo.png"));
+		ammoDummy.sprite = res.spriteAmmo;
 
 		ammoDummy.cord_x = mainHero.cord_x + mainHero.bulletOffset;
 		ammoDummy.cord_y = mainHero.cord_y + mainHero.bulletOffset;
