@@ -1,6 +1,6 @@
 /*
 	COPYRIGHT © 2018 Ringo Hoffmann (zekro Development)
-	READ BEFORE USING: https://zekro.de/policy
+	https://gist.github.com/zekroTJA/00317b41aa69f38090071b6c8065272b
 */
 
 #pragma once

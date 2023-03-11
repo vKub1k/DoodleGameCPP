@@ -1,13 +1,13 @@
 ﻿  DoodleGame.cpp
-D:\DoodleGame\DoodleGame\DoodleGame.cpp(67,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-D:\DoodleGame\DoodleGame\DoodleGame.cpp(159,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-D:\DoodleGame\DoodleGame\DoodleGame.cpp(193,37): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-D:\DoodleGame\DoodleGame\DoodleGame.cpp(193,27): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-D:\DoodleGame\DoodleGame\DoodleGame.cpp(299,13): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-D:\DoodleGame\DoodleGame\DoodleGame.cpp(302,17): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
-D:\DoodleGame\DoodleGame\DoodleGame.cpp(306,19): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
-D:\DoodleGame\DoodleGame\DoodleGame.cpp(393,27): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-D:\DoodleGame\DoodleGame\DoodleGame.cpp(393,7): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-D:\DoodleGame\DoodleGame\DoodleGame.cpp(579,38): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
-D:\DoodleGame\DoodleGame\DoodleGame.cpp(580,38): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+D:\DoodleGame\DoodleGame\DoodleGame.cpp(68,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\DoodleGame\DoodleGame\DoodleGame.cpp(187,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\DoodleGame\DoodleGame\DoodleGame.cpp(248,37): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+D:\DoodleGame\DoodleGame\DoodleGame.cpp(248,27): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+D:\DoodleGame\DoodleGame\DoodleGame.cpp(400,13): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+D:\DoodleGame\DoodleGame\DoodleGame.cpp(403,17): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+D:\DoodleGame\DoodleGame\DoodleGame.cpp(407,19): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+D:\DoodleGame\DoodleGame\DoodleGame.cpp(535,27): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+D:\DoodleGame\DoodleGame\DoodleGame.cpp(535,7): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+D:\DoodleGame\DoodleGame\DoodleGame.cpp(756,38): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+D:\DoodleGame\DoodleGame\DoodleGame.cpp(757,38): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
   DoodleGame.vcxproj -> D:\DoodleGame\x64\Debug\DoodleGame.exe

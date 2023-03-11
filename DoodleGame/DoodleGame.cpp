@@ -11,7 +11,6 @@
 #include <chrono>
 #include <thread>
 
-#include "Timer.h"
 #include "MyStructures.h"
 #include "Hero.h"
 #include "Enums.h"
@@ -22,6 +21,7 @@ using namespace std::this_thread;
 using namespace std::chrono;
 
 namespace fs = std::filesystem;
+bool runAgain = true;
 
 class Game : public Framework {
 
@@ -31,6 +31,7 @@ public:
 	Assets res;
 	Hero mainHero;
 	WorldParams worldParams;
+	Background bg;
 	
 
 	Game(int windowWidth, int windowHeight)
@@ -56,7 +57,7 @@ public:
 	{
 		width = WindowWidth;
 		height = WindowHeight;
-		fullscreen = false;
+		fullscreen = true;
 	}
 
 	char* absPath(fs::path relativePath)
@@ -79,10 +80,50 @@ public:
 		cout << var << endl;
 	}
 
+	void loadSprites(bool isDebug = false)
+	{
+		string pathStart = ".\\data\\prod\\";
+		if (isDebug)
+		{
+			pathStart = ".\\data\\debug\\";
+		}
+		mainHero.sprite = createSprite(absPath(pathStart + "hero.png"));
+
+		//bg sprite load and cfg
+		bg.sprite = createSprite(absPath(pathStart + "bg.png"));
+		saveBackgroundParams();
+
+		//numbers sprite load
+		for (int i = 0; i < 10; i++)
+		{
+			string relativePath = pathStart + "nums\\";
+			relativePath += to_string(i);
+			relativePath += ".png";
+			res.numbers[i] = createSprite(absPath(relativePath));
+		}
+
+		//res load npc sprite
+		res.spriteNpc = createSprite(absPath(pathStart + "npc.png"));
+
+		//res load platforms sprite
+		res.spritePlarfotmReg = createSprite(absPath(pathStart + "p_regular.png"));
+		res.spritePlarfotmBoost = createSprite(absPath(pathStart + "p_boost.png"));
+		res.spritePlarfotmEnemy = createSprite(absPath(pathStart + "p_enemy.png"));
+
+		//res load ammo sprite
+		res.spriteAmmo = createSprite(absPath(pathStart + "ammo.png"));
+
+		//res load abilities sprites
+		res.abilities[0] = createSprite(absPath(pathStart + "ab\\autoshoot.png"));
+
+		//res load gg
+		res.spriteGG = createSprite(absPath(pathStart + "gg.png"));
+	}
+
 	virtual bool Init()
 	{
-		//main hero sprite and params init
-		mainHero.sprite = createSprite(absPath(".\\data\\hero.png"));
+		loadSprites(worldParams.isDebug);
+		//main hero params init
 		getSpriteSize(mainHero.sprite, mainHero.sprite_x, mainHero.sprite_y);
 		mainHero.teleportOffset = mainHero.sprite_x - 2;
 		//set start position for hero
@@ -94,32 +135,12 @@ public:
 		//hero basic params
 		mainHero.bulletOffset = mainHero.sprite_x / 2;
 
-		//numbers sprite load
-		for (int i = 0; i < 10; i++)
-		{
-			string relativePath = ".\\data\\nums\\";
-			relativePath += to_string(i);
-			relativePath += ".png";
-			res.numbers[i] = createSprite(absPath(relativePath));
-		}
-
 		//start params for scoreboards
 		worldParams.platformDeletedUi = new Sprite * [1];
 		worldParams.platformDeletedUi[0] = res.numbers[0];
 		worldParams.traveledDistanceUi = new Sprite * [1];
 		worldParams.traveledDistanceUi[0] = res.numbers[0];
-
-		//res load npc sprite
-		res.spriteNpc = createSprite(absPath(".\\data\\npc.png"));
-
-		//res load platforms sprite
-		res.spritePlarfotmReg = createSprite(absPath(".\\data\\p_regular.png"));
-		res.spritePlarfotmBoost = createSprite(absPath(".\\data\\p_boost.png"));
-		res.spritePlarfotmEnemy = createSprite(absPath(".\\data\\p_enemy.png"));
-
-		//res load ammo sprite
-		res.spriteAmmo = createSprite(absPath(".\\data\\ammo.png"));
-
+		
 		//set seed for random from current time
 		srand((unsigned)time(NULL));
 
@@ -137,6 +158,13 @@ public:
 		}
 		
 		return true;
+	}
+
+	void ShowGG()
+	{
+		int w, h;
+		getSpriteSize(res.spriteGG, w, h);
+		drawSprite(res.spriteGG, (WindowWidth / 2) - (w / 2), (WindowHeight / 2) - (h / 2));
 	}
 
 	virtual void Close()
@@ -176,15 +204,42 @@ public:
 		}
 	}
 
+	void saveBackgroundParams()
+	{
+		getSpriteSize(bg.sprite, bg.sprite_x, bg.sprite_y);
+		bg.qnt_x = WindowWidth / bg.sprite_x + 1;
+		bg.qnt_y = WindowHeight / bg.sprite_y + 1;
+	}
+
+	void drawBackground()
+	{
+		for (int i = 0; i < bg.qnt_y; i++)
+		{
+			for (int j = 0; j < bg.qnt_x; j++)
+			{
+				drawSprite(bg.sprite, bg.sprite_x * j, bg.sprite_y * i);
+			}
+		}
+	}
+
 	void Render()
 	{
 		//render
-		drawTestBackground();
+		if (worldParams.isDebug)
+		{
+			//drawBackground();
+		}
+		else
+		{
+			drawBackground();
+		}
+
 		//render platforms
 		for (Platform& p : Platforms)
 		{
 			drawSprite(p.sprite, p.cord_x, p.cord_y);
 		}
+
 		//render ammo
 		if (Ammos.size() > 0)
 		{
@@ -193,6 +248,7 @@ public:
 				drawSprite(a.sprite, a.cord_x, a.cord_y);
 			}
 		}
+
 		//render enemy
 		if (Enemys.size() > 0)
 		{
@@ -201,6 +257,16 @@ public:
 				drawSprite(e.sprite, e.cord_x, e.cord_y);
 			}
 		}
+
+		//render abilities
+		if (Abilitys.size() > 0)
+		{
+			for (Ability& a : Abilitys)
+			{
+				drawSprite(a.sprite, a.cord_x, a.cord_y);
+			}
+		}
+		
 		//render hero
 		drawSprite(mainHero.sprite, mainHero.cord_x, mainHero.cord_y);
 
@@ -238,6 +304,15 @@ public:
 					e.cord_y -= mainHero.verticalCurrentMovementSpeed;
 				}
 			}
+
+			//scroll abilities
+			if (Abilitys.size() > 0)
+			{
+				for (Ability& a : Abilitys)
+				{
+					a.cord_y -= mainHero.verticalCurrentMovementSpeed;
+				}
+			}
 		}
 		else
 		{
@@ -269,6 +344,32 @@ public:
 		{
 			mainHero.verticalCurrentMovementSpeed++;
 			mainHero.verticalCurrentTickTimer = mainHero.verticalBasicTickTimer;
+		}
+
+		//ability check up
+		if (mainHero.activeAbility != AbilityType::COUNT)
+		{
+			switch (mainHero.activeAbility)
+			{
+			case AbilityType::AUTO_SHOOT:
+				if (!Enemys.empty())
+				{
+					for (Enemy& e : Enemys)
+					{
+						if (isRectCollision(
+							0, 0, WindowWidth, WindowHeight,
+							e.cord_x, e.cord_y, e.sprite_x, e.sprite_y
+							) && !e.wasAutoShooted)
+						{
+							spawnAmmo(e.cord_x + e.sprite_x / 2, e.cord_y + e.sprite_y / 2);
+							e.wasAutoShooted = true;
+						}
+					}
+				}
+				break;
+			default:
+				break;
+			}
 		}
 
 		//hero teleport on edge touch
@@ -321,6 +422,47 @@ public:
 						mainHero.biggestPlatformId = p.id;
 					}
 					heroJump(p.jumpBoost);
+				}
+			}
+		}
+
+		//player x ability collision
+		if (mainHero.activeAbility == AbilityType::COUNT && !Abilitys.empty())
+		{
+			AbilitysItr = Abilitys.begin();
+			for (AbilitysItr; AbilitysItr != Abilitys.end(); AbilitysItr++)
+			{
+				if (isRectCollision(
+					mainHero.cord_x, mainHero.cord_y, mainHero.sprite_x, mainHero.sprite_y,
+					*&AbilitysItr->cord_x, *&AbilitysItr->cord_y, *&AbilitysItr->sprite_x, *&AbilitysItr->sprite_y
+				))
+				{
+					mainHero.activeAbility = *&AbilitysItr->type;
+
+					switch (mainHero.activeAbility)
+					{
+					case AbilityType::AUTO_SHOOT:
+						Log("Start");
+						mainHero.abilityTimer.setFunc([&]() {
+							if (!mainHero.abilityFirstRun)
+							{
+								mainHero.activeAbility = AbilityType::COUNT;
+								mainHero.abilityFirstRun = true;
+								Log("End");
+								mainHero.abilityTimer.stop();
+								}
+							else
+							{
+								mainHero.abilityFirstRun = false;
+							}
+							})
+							->setInterval(20000)->start();
+						break;
+					default:
+						break;
+					}
+					Abilitys.erase(AbilitysItr);
+					break;
 				}
 			}
 		}
@@ -414,12 +556,12 @@ public:
 
 		//all close cases
 		//player x enemy top collision and enemy kill
-		if (mainHero.verticalCurrentMovementSpeed >= 0 && mainHero.isCollisionOn)
+		if (mainHero.verticalCurrentMovementSpeed >= 0 && mainHero.isCollisionOn && !Enemys.empty())
 		{
 			EnemysItr = Enemys.begin();
 			for (EnemysItr; EnemysItr != Enemys.end(); EnemysItr++)
 			{
-				if (isRectCollision(*&EnemysItr->cord_x, *&EnemysItr->cord_y, *&EnemysItr->sprite_x, *&EnemysItr->sprite_y,
+				if (isRectCollision(*&EnemysItr->cord_x, *&EnemysItr->cord_y, *&EnemysItr->sprite_x, *&EnemysItr->sprite_y - 65,
 					mainHero.cord_x, mainHero.cord_y + mainHero.collisionOffset_y, mainHero.sprite_x, mainHero.sprite_y - mainHero.collisionOffset_y))
 				{
 					Enemys.erase(EnemysItr);
@@ -443,10 +585,23 @@ public:
 			}
 		}
 		
-		//player x garbage collector collision and game end
+		//player x fall out and game end
 		if (mainHero.cord_y + mainHero.collisionOffset_y > WindowHeight)
 		{
 			MyClose();
+		}
+
+		//make game process smooth
+		int milliseconds_compensation = worldParams.targetFrameDelay - (getTickCount() - worldParams.prevTickCounter);
+		if (milliseconds_compensation > 0)
+		{
+			sleep_for(milliseconds(milliseconds_compensation));
+		}
+		worldParams.prevTickCounter = getTickCount();
+
+		if (worldParams.doExit)
+		{
+			ShowGG();
 		}
 
 		return worldParams.doExit;
@@ -467,7 +622,7 @@ public:
 		case FRMouseButton::LEFT:
 			if (!isReleased)
 			{
-				spawnAmmo();
+				spawnAmmo(mainHero.mouse_x, mainHero.mouse_y);
 			}
 			break;
 		case FRMouseButton::MIDDLE:
@@ -492,6 +647,28 @@ public:
 
 		Enemys.push_back(dummyEnemy);
 
+	}
+
+	void spawnAbility()
+	{
+		Ability dummyAbility;
+		int platformId = rand() % Platforms.size();
+		PlatformsItr = Platforms.begin();
+		Log(platformId);
+		for (int i = 0; i < platformId; i++)
+		{
+			PlatformsItr++;
+		}
+
+		dummyAbility.cord_x = *&PlatformsItr->cord_x + 20;
+		dummyAbility.cord_y = *&PlatformsItr->cord_y - 60;
+		dummyAbility.type = static_cast<AbilityType>(rand() % (int)AbilityType::COUNT);
+
+		dummyAbility.sprite = res.abilities[(int)AbilityType::AUTO_SHOOT];
+
+		Abilitys.push_back(dummyAbility);
+
+		Log("Ab spawned.");
 	}
 
 	void spawnPlatform(bool isRandomPosition = true, int x = 0, int y = 0,
@@ -571,22 +748,20 @@ public:
 		Platforms.push_back(dummyPlatform);
 	}
 
-	void spawnAmmo()
+	void spawnAmmo(int targetX, int targetY)
 	{
 		Ammo ammoDummy;
 		ammoDummy.sprite = res.spriteAmmo;
 
 		ammoDummy.cord_x = mainHero.cord_x + mainHero.bulletOffset;
 		ammoDummy.cord_y = mainHero.cord_y + mainHero.bulletOffset;
-		float v2x = (mainHero.mouse_x - ammoDummy.cord_x);
-		float v2y = (mainHero.mouse_y - ammoDummy.cord_y);
+		float v2x = (targetX - ammoDummy.cord_x);
+		float v2y = (targetY - ammoDummy.cord_y);
 		float magn = sqrt((v2x * v2x) + (v2y * v2y));
 		ammoDummy.unit_vector_x = v2x / magn;
 		ammoDummy.unit_vector_y = v2y / magn;
 		ammoDummy.speed_x = ammoDummy.unit_vector_x * ammoDummy.basicSpeed;
 		ammoDummy.speed_y = ammoDummy.unit_vector_y * ammoDummy.basicSpeed;
-
-		getSpriteSize(ammoDummy.sprite, ammoDummy.sprite_x, ammoDummy.sprite_y);
 
 		Ammos.push_back(ammoDummy);
 	}
@@ -600,12 +775,18 @@ public:
 			spawnPlatform(false, WindowWidth / 2 - 150, WindowHeight - y, false, PlatformType::REGULAR);
 			y += 100;
 		}
+		spawnPlatform(false, WindowWidth / 2 - 150, WindowHeight - y, false, PlatformType::BOOST);
 	}
 
 	void heroJump(int jumpBoost)
 	{
 		mainHero.verticalCurrentTickTimer = mainHero.verticalBasicTickTimer;
 		mainHero.verticalCurrentMovementSpeed = jumpBoost;
+		mainHero.jumpCounter++;
+		if (mainHero.jumpCounter % mainHero.jumpsToSpawnAbility == 0)
+		{
+			spawnAbility();
+		}
 	}
 
 	virtual void onKeyPressed(FRKey k)
@@ -627,13 +808,13 @@ public:
 			}
 			break;
 		case FRKey::DOWN:
+			runAgain = false;
 			worldParams.doExit = true;
 			break;
 		case FRKey::UP:
-			//heroJump(mainHero.verticalBasicMovementSpeed);
-			//spawnPlatform();
-			break;
-		case FRKey::COUNT:
+			worldParams.isDebug = !worldParams.isDebug;
+			loadSprites(worldParams.isDebug);
+			Log("Debug mod is: " + to_string(worldParams.isDebug));
 			break;
 		default:
 			break;
@@ -676,8 +857,6 @@ public:
 			break;
 		case FRKey::UP:
 			break;
-		case FRKey::COUNT:
-			break;
 		default:
 			break;
 		}
@@ -708,7 +887,7 @@ int main(int argc, char* argv[]) // game -window 800x600
 	string input;
 	int w = 600, h = 800;
 
-	/*cout << "Input window Width (recommended 600): ";
+	/*cout << "Input game window Width (recommended 600): ";
 	getline(std::cin, input);
 
 	while (!tryParse(input, w))
@@ -717,7 +896,7 @@ int main(int argc, char* argv[]) // game -window 800x600
 		getline(std::cin, input);
 	}
 
-	cout << "Input window Height (recommended 800): ";
+	cout << "Input game window Height (recommended 800): ";
 	getline(std::cin, input);
 
 	while (!tryParse(input, h))
@@ -726,7 +905,7 @@ int main(int argc, char* argv[]) // game -window 800x600
 		getline(std::cin, input);
 	}*/
 
-	while (true)
+	while (runAgain)
 	{
 		run(new Game(w, h));
 	}

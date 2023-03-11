@@ -8,10 +8,10 @@ enum class HeroMoveState {
 };
 
 enum class AbilityType {
-	NONE,
 	AUTO_SHOOT,
-	HORIZONTAL_SPEED_UP,
-	JETPACK,
+	//HORIZONTAL_SPEED_UP,
+	//JETPACK,
+	//SLOW_MOTION,
 	COUNT
 };
 

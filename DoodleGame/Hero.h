@@ -2,6 +2,7 @@
 
 //#include "Framework.h"
 #include "Enums.h"
+#include "Timer.h"
 
 using namespace std;
 
@@ -10,7 +11,6 @@ struct Hero {
 
 	int cord_x = 0;
 	int cord_y = 0;
-
 	int sprite_x = 0;
 	int sprite_y = 0;
 
@@ -29,9 +29,6 @@ struct Hero {
 	int verticalBasicTickTimer = 8;
 	int verticalCurrentTickTimer = 0;
 
-	AbilityType activeAbility = AbilityType::NONE;
-	int activeAbilityTimer = 0;
-
 	int biggestPlatformId = -1;
 
 	int mouse_x = 0;
@@ -40,4 +37,11 @@ struct Hero {
 	int mouse_rel_y = 0;
 
 	int bulletOffset = 0;
+
+	unsigned int jumpCounter = 0;
+	int jumpsToSpawnAbility = 50;
+
+	AbilityType activeAbility = AbilityType::COUNT;
+	Timer abilityTimer{};
+	bool abilityFirstRun = true;
 };

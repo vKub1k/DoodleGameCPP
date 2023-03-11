@@ -1,6 +1,5 @@
 #pragma once
 
-#define _WINDOWS
 // To use the framework define _WINDOWS in project's settings!
 #if defined(_WINDOWS)
     #if defined(FRAMEWORK_PROJECT)
