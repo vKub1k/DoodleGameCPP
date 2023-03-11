@@ -11,20 +11,13 @@ struct Assets {
 	Sprite** numbers = new Sprite * [10];
 };
 
-struct GarbageCollector {
-	int x1;
-	int y1;
-	int w1;
-	int h1;
-};
-
 struct Ammo {
 	float cord_x = 0;
 	float cord_y = 0;
-	int sprite_x = 0;
-	int sprite_y = 0;
+	const int sprite_x = 7;
+	const int sprite_y = 7;
 
-	Sprite* sprite = NULL;
+	Sprite* sprite{};
 
 	float unit_vector_x = 0;
 	float unit_vector_y = 0;
@@ -32,6 +25,20 @@ struct Ammo {
 	float speed_x = 0;
 	float speed_y = 0;
 	int basicSpeed = 4;
+};
+
+struct Platform
+{
+	int cord_x = 0;
+	int cord_y = 0;
+	const int sprite_x = 80;
+	const int sprite_y = 15;
+
+	int id = NULL;
+
+	PlatformType type = PlatformType::REGULAR;
+	int jumpBoost = 8;
+	Sprite* sprite{};
 };
 
 struct WorldParams {
@@ -42,30 +49,21 @@ struct WorldParams {
 	int cameraYLimit = 200;
 
 	bool doExit = false;
-};
 
-struct Platform
-{
-	int id = NULL;
-
-	PlatformType type = PlatformType::REGULAR;
-	int jumpBoost = 8;
-
-	int cord_x = 0;
-	int cord_y = 0;
-	const int sprite_x = 80;
-	const int sprite_y = 15;
-	Sprite* sprite{};
+	Sprite** platformDeletedUi;
+	int platformDeletedUiLenght = 1;
+	Sprite** traveledDistanceUi;
+	int traveledDistanceUiLenght = 1;
 };
 
 struct Enemy
 {
 	int cord_x = 0;
 	int cord_y = 0;
-
-	Sprite* sprite = NULL;
 	int sprite_x = 0;
 	int sprite_y = 0;
+
+	Sprite* sprite = NULL;
 };
 
 struct Ability
@@ -74,6 +72,8 @@ struct Ability
 	bool isAlive = true;
 	int cord_x;
 	int cord_y;
+	const int sprite_x = 40;
+	const int sprite_y = 40;
 	Sprite* sprite = NULL;
 };
 

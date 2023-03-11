@@ -27,10 +27,8 @@ class Game : public Framework {
 
 public:
 	int WindowWidth, WindowHeight;
-	GarbageCollector garbageCollector{};
 	
 	Assets res;
-	
 	Hero mainHero;
 	WorldParams worldParams;
 	
@@ -96,13 +94,7 @@ public:
 		//hero basic params
 		mainHero.bulletOffset = mainHero.sprite_x / 2;
 
-		//garbage collector
-		garbageCollector.x1 = 0;
-		garbageCollector.y1 = WindowHeight + 14;
-		garbageCollector.w1 = WindowWidth;
-		garbageCollector.h1 = 100;
-
-		//numbers sprite init
+		//numbers sprite load
 		for (int i = 0; i < 10; i++)
 		{
 			string relativePath = ".\\data\\nums\\";
@@ -110,12 +102,21 @@ public:
 			relativePath += ".png";
 			res.numbers[i] = createSprite(absPath(relativePath));
 		}
+
+		//start params for scoreboards
+		worldParams.platformDeletedUi = new Sprite * [1];
+		worldParams.platformDeletedUi[0] = res.numbers[0];
+		worldParams.traveledDistanceUi = new Sprite * [1];
+		worldParams.traveledDistanceUi[0] = res.numbers[0];
+
 		//res load npc sprite
 		res.spriteNpc = createSprite(absPath(".\\data\\npc.png"));
+
 		//res load platforms sprite
 		res.spritePlarfotmReg = createSprite(absPath(".\\data\\p_regular.png"));
 		res.spritePlarfotmBoost = createSprite(absPath(".\\data\\p_boost.png"));
 		res.spritePlarfotmEnemy = createSprite(absPath(".\\data\\p_enemy.png"));
+
 		//res load ammo sprite
 		res.spriteAmmo = createSprite(absPath(".\\data\\ammo.png"));
 
@@ -153,17 +154,26 @@ public:
 		return (x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2);
 	}
 
-	void drawNumber(int num, int offsetX, int offsetY)
+	void calculateUiNumber(Sprite**& tab, int& lenght, int num)
 	{
 		int flag = to_string(num).size();
-		Log(num);
+		tab = new Sprite * [flag];
+		lenght = flag;
 		do 
 		{
-			int numId = num % 10;
-			drawSprite(res.numbers[numId], offsetX + (flag - 1) * 22, offsetY);
-			num /= 10;
 			flag--;
+			int numId = num % 10;
+			tab[flag] = res.numbers[numId];
+			num /= 10;
 		} while (num != 0);
+	}
+
+	void drawUiNumber(Sprite** nums, int length,  int offsetX, int offsetY)
+	{
+		for (int i = length - 1; i >= 0; i--)
+		{
+			drawSprite(nums[i], offsetX + i * 22, offsetY);
+		}
 	}
 
 	void Render()
@@ -195,8 +205,8 @@ public:
 		drawSprite(mainHero.sprite, mainHero.cord_x, mainHero.cord_y);
 
 		//render ui
-		drawNumber(worldParams.traveledDistance, 6, 6);
-		drawNumber(worldParams.platformDeleted, 6, 44);
+		drawUiNumber(worldParams.traveledDistanceUi, worldParams.traveledDistanceUiLenght, 6, 6);
+		drawUiNumber(worldParams.platformDeletedUi, worldParams.platformDeletedUiLenght, 6, 44);
 	}
 
 	virtual bool Tick()
@@ -206,7 +216,7 @@ public:
 		{
 			//world scroll
 			worldParams.traveledDistance -= mainHero.verticalCurrentMovementSpeed;
-			//TODO: scoreboard
+			calculateUiNumber(worldParams.traveledDistanceUi, worldParams.traveledDistanceUiLenght, worldParams.traveledDistance);
 			//scroll platforms
 			for (Platform &p : Platforms)
 			{
@@ -326,7 +336,7 @@ public:
 					Platforms.erase(PlatformsItr);
 					worldParams.platformDeleted++;
 					spawnPlatform();
-					//TODO: scoreboard for deleted platforms
+					calculateUiNumber(worldParams.platformDeletedUi, worldParams.platformDeletedUiLenght, worldParams.platformDeleted);
 					break;
 				}
 				else
@@ -434,11 +444,7 @@ public:
 		}
 		
 		//player x garbage collector collision and game end
-		if (isRectCollision(
-			garbageCollector.x1, garbageCollector.y1, garbageCollector.w1, garbageCollector.h1,
-			mainHero.cord_x, mainHero.cord_y + mainHero.collisionOffset_y,
-			mainHero.sprite_x, mainHero.sprite_y - mainHero.collisionOffset_y
-		))
+		if (mainHero.cord_y + mainHero.collisionOffset_y > WindowHeight)
 		{
 			MyClose();
 		}
