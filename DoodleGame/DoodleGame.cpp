@@ -153,6 +153,19 @@ public:
 		return (x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2);
 	}
 
+	void drawNumber(int num, int offsetX, int offsetY)
+	{
+		int flag = to_string(num).size();
+		Log(num);
+		do 
+		{
+			int numId = num % 10;
+			drawSprite(res.numbers[numId], offsetX + (flag - 1) * 22, offsetY);
+			num /= 10;
+			flag--;
+		} while (num != 0);
+	}
+
 	void Render()
 	{
 		//render
@@ -180,14 +193,14 @@ public:
 		}
 		//render hero
 		drawSprite(mainHero.sprite, mainHero.cord_x, mainHero.cord_y);
+
+		//render ui
+		drawNumber(worldParams.traveledDistance, 6, 6);
+		drawNumber(worldParams.platformDeleted, 6, 44);
 	}
 
 	virtual bool Tick()
 	{
-		if (false)
-		{
-
-		}
 		//vertical logic
 		if (mainHero.cord_y <= worldParams.cameraYLimit && mainHero.verticalCurrentMovementSpeed < 0)
 		{
@@ -220,6 +233,9 @@ public:
 		{
 			mainHero.cord_y += mainHero.verticalCurrentMovementSpeed;
 		}
+
+
+
 
 		//horizontal logic
 		switch (mainHero.moveState)
@@ -311,7 +327,6 @@ public:
 					worldParams.platformDeleted++;
 					spawnPlatform();
 					//TODO: scoreboard for deleted platforms
-					Log(worldParams.platformDeleted);
 					break;
 				}
 				else
@@ -435,8 +450,8 @@ public:
 	{
 		mainHero.mouse_x = x;
 		mainHero.mouse_y = y;
-		mainHero.mouse_rel_x = xrelative;
-		mainHero.mouse_rel_y = yrelative;
+		//mainHero.mouse_rel_x = xrelative;
+		//mainHero.mouse_rel_y = yrelative;
 	}
 
 	virtual void onMouseButtonClick(FRMouseButton button, bool isReleased)
