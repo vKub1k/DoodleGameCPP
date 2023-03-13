@@ -6,7 +6,6 @@
 #include <filesystem>
 #include <list> 
 #include <random>
-#include <math.h>
 #include <cmath>
 #include <chrono>
 #include <thread>
@@ -17,6 +16,11 @@
 #include "Assets.h"
 #include "WorldParams.h"
 #include "Hole.h"
+#include "Ammo.h"
+#include "Ability.h"
+#include "Platform.h"
+#include "Enemy.h"
+#include "Background.h"
 
 
 using namespace std;
@@ -24,51 +28,50 @@ using namespace std::this_thread;
 using namespace std::chrono;
 
 namespace fs = std::filesystem;
-bool runAgain = true;
+bool run_again = true;
 
-class Game : public Framework {
+class game final : public Framework {
 
 public:
-	int WindowWidth, WindowHeight;
+	int window_width, window_height;
 	
 	Assets res;
-	Hero mainHero;
-	WorldParams worldParams;
+	Hero main_hero;
+	WorldParams world_params;
 	Background bg;
 
-	//auto it = std::find(l.begin(), l.end(), 16);
-	list<Platform> Platforms;
-	list<Platform>::iterator PlatformsItr;
+	list<Platform> platforms;
+	list<Platform>::iterator platforms_itr;
 
-	list<Ammo> Ammos;
-	list<Ammo>::iterator AmmosItr;
+	list<Ammo> ammos;
+	list<Ammo>::iterator ammos_itr;
 
-	list<Enemy> Enemys;
-	list<Enemy>::iterator EnemysItr;
+	list<Enemy> enemys;
+	list<Enemy>::iterator enemys_itr;
 
-	list<Ability> Abilitys;
-	list<Ability>::iterator AbilitysItr;
+	list<Ability> abilitys;
+	list<Ability>::iterator abilitys_itr;
 
-	list<Hole> Holes;
-	list<Hole>::iterator HolesItr;
+	list<Hole> holes;
+	list<Hole>::iterator holes_itr;
 	
 
-	Game(int windowWidth, int windowHeight)
+	game(const int windowWidth, int windowHeight): res(), world_params()
 	{
-		WindowWidth = windowWidth;
-		WindowHeight = windowHeight;
+		window_width = windowWidth;
+		window_height = windowHeight;
 	}
 
 	virtual void PreInit(int& width, int& height, bool& fullscreen)
 	{
-		width = WindowWidth;
-		height = WindowHeight;
+		width = window_width;
+		height = window_height;
 		fullscreen = false;
 	}
 
-	char* absPath(fs::path relativePath)
+	char* abs_path(fs::path relative_path) const
 	{
-		fs::path resultPath = fs::absolute(relativePath);
+		fs::path resultPath = fs::absolute(relative_path);
 		string str = resultPath.string();
 
 		int len = str.size();
@@ -76,7 +79,7 @@ public:
 		char* resultChar = new char[len + 1];
 		std::copy(str.begin(), str.end(), resultChar);
 		resultChar[len] = '\0';
-		cout << "absPath(" << relativePath << ") execution result: " << resultChar << endl;
+		cout << "absPath(" << relative_path << ") execution result: " << resultChar << endl;
 		return resultChar;
 	}
 
@@ -93,10 +96,10 @@ public:
 		{
 			pathStart = ".\\data\\debug\\";
 		}
-		mainHero.sprite = createSprite(absPath(pathStart + "hero.png"));
+		main_hero.sprite = createSprite(abs_path(pathStart + "hero.png"));
 
 		//bg sprite load and cfg
-		bg.sprite = createSprite(absPath(pathStart + "bg.png"));
+		bg.sprite = createSprite(abs_path(pathStart + "bg.png"));
 		saveBackgroundParams();
 
 		//numbers sprite load
@@ -105,62 +108,62 @@ public:
 			string relativePath = pathStart + "nums\\";
 			relativePath += to_string(i);
 			relativePath += ".png";
-			res.numbers[i] = createSprite(absPath(relativePath));
+			res.numbers[i] = createSprite(abs_path(relativePath));
 		}
 
 		//res load npc sprite
-		res.spriteNpc = createSprite(absPath(pathStart + "npc.png"));
+		res.spriteNpc = createSprite(abs_path(pathStart + "npc.png"));
 
 		//res load platforms sprite
-		res.spritePlarfotmReg = createSprite(absPath(pathStart + "p_regular.png"));
-		res.spritePlarfotmBoost = createSprite(absPath(pathStart + "p_boost.png"));
-		res.spritePlarfotmEnemy = createSprite(absPath(pathStart + "p_enemy.png"));
-		res.spritePlarfotmHole = createSprite(absPath(pathStart + "p_hole.png"));
-		res.spritePlarfotmMove = createSprite(absPath(pathStart + "p_move.png"));
-		res.spritePlarfotmOneTouch = createSprite(absPath(pathStart + "p_onetouch.png"));
+		res.spritePlarfotmReg = createSprite(abs_path(pathStart + "p_regular.png"));
+		res.spritePlarfotmBoost = createSprite(abs_path(pathStart + "p_boost.png"));
+		res.spritePlarfotmEnemy = createSprite(abs_path(pathStart + "p_enemy.png"));
+		res.spritePlarfotmHole = createSprite(abs_path(pathStart + "p_hole.png"));
+		res.spritePlarfotmMove = createSprite(abs_path(pathStart + "p_move.png"));
+		res.spritePlarfotmOneTouch = createSprite(abs_path(pathStart + "p_onetouch.png"));
 
 		//res load ammo sprite
-		res.spriteAmmo = createSprite(absPath(pathStart + "ammo.png"));
+		res.spriteAmmo = createSprite(abs_path(pathStart + "ammo.png"));
 
 		//res load abilities sprites
-		res.abilities[0] = createSprite(absPath(pathStart + "ab\\autoshoot.png"));
+		res.abilities[0] = createSprite(abs_path(pathStart + "ab\\autoshoot.png"));
 
 		//res load gg
-		res.spriteGG = createSprite(absPath(pathStart + "gg.png"));
+		res.spriteGG = createSprite(abs_path(pathStart + "gg.png"));
 
 		//res load holes
-		res.spriteWhiteHole = createSprite(absPath(pathStart + "whitehole.png"));
-		res.spriteBlackHole = createSprite(absPath(pathStart + "blackhole.png"));
+		res.spriteWhiteHole = createSprite(abs_path(pathStart + "whitehole.png"));
+		res.spriteBlackHole = createSprite(abs_path(pathStart + "blackhole.png"));
 	}
 
 	virtual bool Init()
 	{
-		loadSprites(worldParams.isDebug);
+		loadSprites(world_params.isDebug);
 		//main hero params init
-		getSpriteSize(mainHero.sprite, mainHero.sprite_x, mainHero.sprite_y);
-		mainHero.teleportOffset = mainHero.sprite_x - 2;
+		getSpriteSize(main_hero.sprite, main_hero.sprite_x, main_hero.sprite_y);
+		main_hero.teleportOffset = main_hero.sprite_x - 2;
 		//set start position for hero
-		mainHero.cord_x = WindowWidth / 2 - mainHero.sprite_x / 2;
-		mainHero.cord_y = WindowHeight - mainHero.sprite_y - worldParams.bottomOffset;
+		main_hero.cord_x = window_width / 2 - main_hero.sprite_x / 2;
+		main_hero.cord_y = window_height - main_hero.sprite_y - world_params.bottomOffset;
 		//hero start falling down
-		mainHero.verticalCurrentMovementSpeed = 0;
-		mainHero.verticalCurrentTickTimer = mainHero.verticalBasicTickTimer;
+		main_hero.verticalCurrentMovementSpeed = 0;
+		main_hero.verticalCurrentTickTimer = main_hero.verticalBasicTickTimer;
 		//hero basic params
-		mainHero.bulletOffset = mainHero.sprite_x / 2;
+		main_hero.bulletOffset = main_hero.sprite_x / 2;
 
 		//start params for scoreboards
-		worldParams.platformDeletedUi = new Sprite * [1];
-		worldParams.platformDeletedUi[0] = res.numbers[0];
-		worldParams.traveledDistanceUi = new Sprite * [1];
-		worldParams.traveledDistanceUi[0] = res.numbers[0];
+		world_params.platformDeletedUi = new Sprite * [1];
+		world_params.platformDeletedUi[0] = res.numbers[0];
+		world_params.traveledDistanceUi = new Sprite * [1];
+		world_params.traveledDistanceUi[0] = res.numbers[0];
 		
 		//set seed for random from current time
 		srand((unsigned)time(NULL));
 
 		//spawn world start platforms
-		if (WindowWidth > 600)
+		if (window_width > 600)
 		{
-			for (int i = 0; i < WindowWidth / 400; i++)
+			for (int i = 0; i < window_width / 400; i++)
 			{
 				startWorldCtr();
 			}
@@ -177,7 +180,7 @@ public:
 	{
 		int w, h;
 		getSpriteSize(res.spriteGG, w, h);
-		drawSprite(res.spriteGG, (WindowWidth / 2) - (w / 2), (WindowHeight / 2) - (h / 2));
+		drawSprite(res.spriteGG, (window_width / 2) - (w / 2), (window_height / 2) - (h / 2));
 	}
 
 	virtual void Close()
@@ -187,7 +190,7 @@ public:
 
 	void MyClose()
 	{
-		worldParams.doExit = true;
+		world_params.doExit = true;
 	}
 
 	bool isRectCollision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2)
@@ -220,8 +223,8 @@ public:
 	void saveBackgroundParams()
 	{
 		getSpriteSize(bg.sprite, bg.sprite_x, bg.sprite_y);
-		bg.qnt_x = WindowWidth / bg.sprite_x + 1;
-		bg.qnt_y = WindowHeight / bg.sprite_y + 1;
+		bg.qnt_x = window_width / bg.sprite_x + 1;
+		bg.qnt_y = window_height / bg.sprite_y + 1;
 	}
 
 	void drawBackground()
@@ -238,7 +241,7 @@ public:
 	void Render()
 	{
 		//render
-		if (worldParams.isDebug)
+		if (world_params.isDebug)
 		{
 			//drawBackground();
 		}
@@ -248,97 +251,97 @@ public:
 		}
 
 		//render platforms
-		for (Platform& p : Platforms)
+		for (Platform& p : platforms)
 		{
 			drawSprite(p.sprite, p.cord_x, p.cord_y);
 		}
 
 		//render ammo
-		if (Ammos.size() > 0)
+		if (ammos.size() > 0)
 		{
-			for (Ammo& a : Ammos)
+			for (Ammo& a : ammos)
 			{
 				drawSprite(a.sprite, a.cord_x, a.cord_y);
 			}
 		}
 
 		//render enemy
-		if (Enemys.size() > 0)
+		if (enemys.size() > 0)
 		{
-			for (Enemy& e : Enemys)
+			for (Enemy& e : enemys)
 			{
 				drawSprite(e.sprite, e.cord_x, e.cord_y);
 			}
 		}
 
 		//render abilities
-		if (Abilitys.size() > 0)
+		if (abilitys.size() > 0)
 		{
-			for (Ability& a : Abilitys)
+			for (Ability& a : abilitys)
 			{
 				drawSprite(a.sprite, a.cord_x, a.cord_y);
 			}
 		}
 
 		//scroll holes
-		if (!Holes.empty())
+		if (!holes.empty())
 		{
-			for (Hole& h : Holes)
+			for (Hole& h : holes)
 			{
 				drawSprite(h.sprite, h.cord_x, h.cord_y);
 			}
 		}
 		
 		//render hero
-		drawSprite(mainHero.sprite, mainHero.cord_x, mainHero.cord_y);
+		drawSprite(main_hero.sprite, main_hero.cord_x, main_hero.cord_y);
 
 		//render ui
-		drawUiNumber(worldParams.traveledDistanceUi, worldParams.traveledDistanceUiLenght, 6, 6);
-		drawUiNumber(worldParams.platformDeletedUi, worldParams.platformDeletedUiLenght, 6, 44);
+		drawUiNumber(world_params.traveledDistanceUi, world_params.traveledDistanceUiLenght, 6, 6);
+		drawUiNumber(world_params.platformDeletedUi, world_params.platformDeletedUiLenght, 6, 44);
 	}
 
 	void Scroll()
 	{
 		//world scroll
-		worldParams.traveledDistance -= mainHero.verticalCurrentMovementSpeed;
-		calculateUiNumber(worldParams.traveledDistanceUi, worldParams.traveledDistanceUiLenght, worldParams.traveledDistance);
+		world_params.traveledDistance -= main_hero.verticalCurrentMovementSpeed;
+		calculateUiNumber(world_params.traveledDistanceUi, world_params.traveledDistanceUiLenght, world_params.traveledDistance);
 		//scroll platforms
-		for (Platform& p : Platforms)
+		for (Platform& p : platforms)
 		{
-			p.cord_y -= mainHero.verticalCurrentMovementSpeed;
+			p.cord_y -= main_hero.verticalCurrentMovementSpeed;
 		}
 		//scroll ammo
-		if (Ammos.size() > 0)
+		if (ammos.size() > 0)
 		{
-			for (Ammo& a : Ammos)
+			for (Ammo& a : ammos)
 			{
-				a.cord_y -= mainHero.verticalCurrentMovementSpeed;
+				a.cord_y -= main_hero.verticalCurrentMovementSpeed;
 			}
 		}
 		//scroll enemys
-		if (Enemys.size() > 0)
+		if (enemys.size() > 0)
 		{
-			for (Enemy& e : Enemys)
+			for (Enemy& e : enemys)
 			{
-				e.cord_y -= mainHero.verticalCurrentMovementSpeed;
+				e.cord_y -= main_hero.verticalCurrentMovementSpeed;
 			}
 		}
 
 		//scroll abilities
-		if (Abilitys.size() > 0)
+		if (abilitys.size() > 0)
 		{
-			for (Ability& a : Abilitys)
+			for (Ability& a : abilitys)
 			{
-				a.cord_y -= mainHero.verticalCurrentMovementSpeed;
+				a.cord_y -= main_hero.verticalCurrentMovementSpeed;
 			}
 		}
 
 		//scroll holes
-		if (!Holes.empty())
+		if (!holes.empty())
 		{
-			for (Hole& h : Holes)
+			for (Hole& h : holes)
 			{
-				h.cord_y -= mainHero.verticalCurrentMovementSpeed;
+				h.cord_y -= main_hero.verticalCurrentMovementSpeed;
 			}
 		}
 	}
@@ -346,25 +349,25 @@ public:
 	virtual bool Tick()
 	{
 		//vertical logic
-		if (mainHero.cord_y <= worldParams.cameraYLimit && mainHero.verticalCurrentMovementSpeed < 0)
+		if (main_hero.cord_y <= world_params.cameraYLimit && main_hero.verticalCurrentMovementSpeed < 0)
 		{
 			Scroll();
 		}
 		else
 		{
-			mainHero.cord_y += mainHero.verticalCurrentMovementSpeed + mainHero.passive_force_y;
+			main_hero.cord_y += main_hero.verticalCurrentMovementSpeed + main_hero.passive_force_y;
 		}
 
 		//horizontal hero movement
-		switch (mainHero.moveState)
+		switch (main_hero.moveState)
 		{
 		case HeroMoveState::LEFT:
-			mainHero.cord_x -= mainHero.horizontalMovementSpeed;
+			main_hero.cord_x -= main_hero.horizontalMovementSpeed;
 			break;
 		case HeroMoveState::IDLE:
 			break;
 		case HeroMoveState::RIGHT:
-			mainHero.cord_x += mainHero.horizontalMovementSpeed;
+			main_hero.cord_x += main_hero.horizontalMovementSpeed;
 			break;
 		case HeroMoveState::COUNT:
 			break;
@@ -372,34 +375,34 @@ public:
 			break;
 		}
 		//hero teleport on edge touch
-		if (mainHero.cord_x < 0 - mainHero.teleportOffset)
+		if (main_hero.cord_x < 0 - main_hero.teleportOffset)
 		{
-			mainHero.cord_x = WindowWidth - (mainHero.sprite_x - mainHero.teleportOffset);
+			main_hero.cord_x = window_width - (main_hero.sprite_x - main_hero.teleportOffset);
 		}
-		else if (mainHero.cord_x > WindowWidth - (mainHero.sprite_x - mainHero.teleportOffset))
+		else if (main_hero.cord_x > window_width - (main_hero.sprite_x - main_hero.teleportOffset))
 		{
-			mainHero.cord_x = 0 - mainHero.teleportOffset;
+			main_hero.cord_x = 0 - main_hero.teleportOffset;
 		}
 
 		//jump tick logic
-		if (--mainHero.verticalCurrentTickTimer == 0)
+		if (--main_hero.verticalCurrentTickTimer == 0)
 		{
-			mainHero.verticalCurrentMovementSpeed++;
-			mainHero.verticalCurrentTickTimer = mainHero.verticalBasicTickTimer;
+			main_hero.verticalCurrentMovementSpeed++;
+			main_hero.verticalCurrentTickTimer = main_hero.verticalBasicTickTimer;
 		}
 
 		//ability check up
-		if (mainHero.activeAbility != AbilityType::COUNT)
+		if (main_hero.activeAbility != AbilityType::COUNT)
 		{
-			switch (mainHero.activeAbility)
+			switch (main_hero.activeAbility)
 			{
 			case AbilityType::AUTO_SHOOT:
-				if (!Enemys.empty())
+				if (!enemys.empty())
 				{
-					for (Enemy& e : Enemys)
+					for (Enemy& e : enemys)
 					{
 						if (isRectCollision(
-							0, 0, WindowWidth, WindowHeight,
+							0, 0, window_width, window_height,
 							e.cord_x, e.cord_y, e.sprite_x, e.sprite_y
 							) && !e.wasAutoShooted)
 						{
@@ -415,9 +418,9 @@ public:
 		}
 
 		//move ammo
-		if (Ammos.size() > 0)
+		if (ammos.size() > 0)
 		{
-			for (Ammo& a : Ammos)
+			for (Ammo& a : ammos)
 			{
 				a.cord_x += a.speed_x;
 				a.cord_y += a.speed_y;
@@ -425,16 +428,16 @@ public:
 		}
 
 		//ammo teleport on edge touch
-		if (Ammos.size() > 0)
+		if (ammos.size() > 0)
 		{
-			for (Ammo& a : Ammos)
+			for (Ammo& a : ammos)
 			{
 				int a_x = round(a.cord_x);
 				if (a_x < 0 - a.sprite_x)
 				{
-					a.cord_x = WindowWidth;
+					a.cord_x = window_width;
 				}
-				else if (WindowWidth < a_x)
+				else if (window_width < a_x)
 				{
 					a.cord_x = 0 - a.sprite_x;
 				}
@@ -442,16 +445,16 @@ public:
 		}
 
 		//player x platform collision
-		if (mainHero.verticalCurrentMovementSpeed >= 0)
+		if (main_hero.verticalCurrentMovementSpeed >= 0)
 		{
-			for (Platform& p : Platforms)
+			for (Platform& p : platforms)
 			{
 				if (isRectCollision(p.cord_x, p.cord_y, p.sprite_x, p.sprite_y,
-					mainHero.cord_x, mainHero.cord_y + mainHero.collisionOffset_y, mainHero.sprite_x, mainHero.sprite_y - mainHero.collisionOffset_y))
+					main_hero.cord_x, main_hero.cord_y + main_hero.collisionOffset_y, main_hero.sprite_x, main_hero.sprite_y - main_hero.collisionOffset_y))
 				{
-					if (mainHero.biggestPlatformId < p.id)
+					if (main_hero.biggestPlatformId < p.id)
 					{
-						mainHero.biggestPlatformId = p.id;
+						main_hero.biggestPlatformId = p.id;
 					}
 					heroJump(p.jumpBoost);
 				}
@@ -459,62 +462,60 @@ public:
 		}
 
 		//player x holes collision
-		if (!Holes.empty())
+		if (!holes.empty())
 		{
-			int tmpHero_x = mainHero.cord_x + mainHero.sprite_x / 2;
-			int tmpHero_y = mainHero.cord_y + mainHero.sprite_y / 2;
-			for (Hole& h : Holes)
+			int tmpHero_x = main_hero.cord_x + main_hero.sprite_x / 2;
+			int tmpHero_y = main_hero.cord_y + main_hero.sprite_y / 2;
+			for (Hole& h : holes)
 			{
 				int tmpHole_x = h.cord_x + h.sprite_x / 2;
 				int tmpHole_y = h.cord_y + h.sprite_y / 2;
 				int delta_x = tmpHero_x - tmpHole_x;
 				int delta_y = tmpHero_y - tmpHole_y;
 				int distance = sqrt((delta_x* delta_x) + (delta_y * delta_y));
-				Log(distance);
 				int power = h.field_radius - distance;
 				if (power > 0)
 				{
-					Log("PUSH");
 					int power = h.field_radius - distance;
 					float unit_vector_x = delta_x / distance;
 					float unit_vector_y = delta_y / distance;
 					float power_x = (power * unit_vector_x * h.holeDirection) / h.powerModifier;
 					float power_y = (power * unit_vector_y * h.holeDirection) / h.powerModifier;
 
-					mainHero.passive_force_x = power_x;
-					mainHero.cord_x += mainHero.passive_force_x;
+					main_hero.passive_force_x = power_x;
+					main_hero.cord_x += main_hero.passive_force_x;
 
-					mainHero.passive_force_y = power_y;
+					main_hero.passive_force_y = power_y;
 				}
 			}
 		}
 
 		//player x ability collision
-		if (mainHero.activeAbility == AbilityType::COUNT && !Abilitys.empty())
+		if (main_hero.activeAbility == AbilityType::COUNT && !abilitys.empty())
 		{
-			AbilitysItr = Abilitys.begin();
-			for (AbilitysItr; AbilitysItr != Abilitys.end(); AbilitysItr++)
+			abilitys_itr = abilitys.begin();
+			for (abilitys_itr; abilitys_itr != abilitys.end(); abilitys_itr++)
 			{
 				if (isRectCollision(
-					mainHero.cord_x, mainHero.cord_y, mainHero.sprite_x, mainHero.sprite_y,
-					*&AbilitysItr->cord_x, *&AbilitysItr->cord_y, *&AbilitysItr->sprite_x, *&AbilitysItr->sprite_y
+					main_hero.cord_x, main_hero.cord_y, main_hero.sprite_x, main_hero.sprite_y,
+					*&abilitys_itr->cord_x, *&abilitys_itr->cord_y, *&abilitys_itr->sprite_x, *&abilitys_itr->sprite_y
 				))
 				{
-					mainHero.activeAbility = *&AbilitysItr->type;
-
-					switch (mainHero.activeAbility)
+					main_hero.activeAbility = *&abilitys_itr->type;
+					//ability start
+					switch (main_hero.activeAbility)
 					{
 					case AbilityType::AUTO_SHOOT:
-						mainHero.abilityTimer.setFunc([&]() {
-							if (!mainHero.abilityFirstRun)
+						main_hero.abilityTimer.setFunc([&]() {
+							if (!main_hero.abilityFirstRun)
 							{
-								mainHero.activeAbility = AbilityType::COUNT;
-								mainHero.abilityFirstRun = true;
-								mainHero.abilityTimer.stop();
+								main_hero.activeAbility = AbilityType::COUNT;
+								main_hero.abilityFirstRun = true;
+								main_hero.abilityTimer.stop();
 								}
 							else
 							{
-								mainHero.abilityFirstRun = false;
+								main_hero.abilityFirstRun = false;
 							}
 							})
 							->setInterval(20000)->start();
@@ -522,24 +523,24 @@ public:
 					default:
 						break;
 					}
-					Abilitys.erase(AbilitysItr);
+					abilitys.erase(abilitys_itr);
 					break;
 				}
 			}
 		}
 
 		//platform clean up and spawning new platforms
-		if (Platforms.size() > 0)
+		if (platforms.size() > 0)
 		{
-			PlatformsItr = Platforms.begin();
-			for (PlatformsItr; PlatformsItr != Platforms.end(); PlatformsItr++)
+			platforms_itr = platforms.begin();
+			for (platforms_itr; platforms_itr != platforms.end(); platforms_itr++)
 			{
-				if (*&PlatformsItr->cord_y > WindowHeight)
+				if (*&platforms_itr->cord_y > window_height)
 				{
-					Platforms.erase(PlatformsItr);
-					worldParams.platformDeleted++;
+					platforms.erase(platforms_itr);
+					world_params.platformDeleted++;
 					spawnPlatform();
-					calculateUiNumber(worldParams.platformDeletedUi, worldParams.platformDeletedUiLenght, worldParams.platformDeleted);
+					calculateUiNumber(world_params.platformDeletedUi, world_params.platformDeletedUiLenght, world_params.platformDeleted);
 					break;
 				}
 				else
@@ -550,28 +551,28 @@ public:
 		}
 
 		//ammo clean up
-		if (Ammos.size() > 0)
+		if (ammos.size() > 0)
 		{
-			AmmosItr = Ammos.begin();
-			for (AmmosItr; AmmosItr != Ammos.end(); AmmosItr++)
+			ammos_itr = ammos.begin();
+			for (ammos_itr; ammos_itr != ammos.end(); ammos_itr++)
 			{
-				if (*&AmmosItr->cord_y > WindowHeight || *&AmmosItr->cord_y < 0 - *&AmmosItr->sprite_y)
+				if (*&ammos_itr->cord_y > window_height || *&ammos_itr->cord_y < 0 - *&ammos_itr->sprite_y)
 				{
-					Ammos.erase(AmmosItr);
+					ammos.erase(ammos_itr);
 					break;
 				}
 			}
 		}
 
 		//enemy clean up
-		if (Enemys.size() > 0)
+		if (enemys.size() > 0)
 		{
-			EnemysItr = Enemys.begin();
-			for (EnemysItr; EnemysItr != Enemys.end(); EnemysItr++)
+			enemys_itr = enemys.begin();
+			for (enemys_itr; enemys_itr != enemys.end(); enemys_itr++)
 			{
-				if (*&EnemysItr->cord_y > WindowHeight)
+				if (*&enemys_itr->cord_y > window_height)
 				{
-					Enemys.erase(EnemysItr);
+					enemys.erase(enemys_itr);
 					break;
 				}
 				else
@@ -582,14 +583,14 @@ public:
 		}
 
 		//holes clean up
-		if (Holes.size() > 0)
+		if (holes.size() > 0)
 		{
-			HolesItr = Holes.begin();
-			for (HolesItr; HolesItr != Holes.end(); HolesItr++)
+			holes_itr = holes.begin();
+			for (holes_itr; holes_itr != holes.end(); holes_itr++)
 			{
-				if (*&HolesItr->cord_y > WindowHeight)
+				if (*&holes_itr->cord_y > window_height)
 				{
-					Holes.erase(HolesItr);
+					holes.erase(holes_itr);
 					break;
 				}
 				else
@@ -600,18 +601,18 @@ public:
 		}
 
 		//enemy x ammo collision and enemy kill
-		if (Enemys.size() > 0 && Ammos.size() > 0)
+		if (enemys.size() > 0 && ammos.size() > 0)
 		{
-			EnemysItr = Enemys.begin();
+			enemys_itr = enemys.begin();
 			bool flag = false;
-			for (EnemysItr; EnemysItr != Enemys.end(); EnemysItr++)
+			for (enemys_itr; enemys_itr != enemys.end(); enemys_itr++)
 			{
-				AmmosItr = Ammos.begin();
-				for (AmmosItr; AmmosItr != Ammos.end(); AmmosItr++)
+				ammos_itr = ammos.begin();
+				for (ammos_itr; ammos_itr != ammos.end(); ammos_itr++)
 				{
 					if (isRectCollision(
-						*&EnemysItr->cord_x, *&EnemysItr->cord_y, *&EnemysItr->sprite_x, *&EnemysItr->sprite_y,
-						*&AmmosItr->cord_x, *&AmmosItr->cord_y, *&AmmosItr->sprite_x, *&AmmosItr->sprite_y
+						*&enemys_itr->cord_x, *&enemys_itr->cord_y, *&enemys_itr->sprite_x, *&enemys_itr->sprite_y,
+						*&ammos_itr->cord_x, *&ammos_itr->cord_y, *&ammos_itr->sprite_x, *&ammos_itr->sprite_y
 					))
 					{
 						flag = true;
@@ -625,8 +626,8 @@ public:
 			}
 			if (flag)
 			{
-				Enemys.erase(EnemysItr);
-				Ammos.erase(AmmosItr);
+				enemys.erase(enemys_itr);
+				ammos.erase(ammos_itr);
 			}
 		}
 
@@ -635,36 +636,36 @@ public:
 
 		//all game over cases
 		//player x enemy top collision and enemy kill
-		if (mainHero.verticalCurrentMovementSpeed >= 0 && !Enemys.empty())
+		if (main_hero.verticalCurrentMovementSpeed >= 0 && !enemys.empty())
 		{
-			EnemysItr = Enemys.begin();
-			for (EnemysItr; EnemysItr != Enemys.end(); EnemysItr++)
+			enemys_itr = enemys.begin();
+			for (enemys_itr; enemys_itr != enemys.end(); enemys_itr++)
 			{
-				if (isRectCollision(*&EnemysItr->cord_x, *&EnemysItr->cord_y, *&EnemysItr->sprite_x, *&EnemysItr->sprite_y - 65,
-					mainHero.cord_x, mainHero.cord_y + mainHero.collisionOffset_y, mainHero.sprite_x, mainHero.sprite_y - mainHero.collisionOffset_y))
+				if (isRectCollision(*&enemys_itr->cord_x, *&enemys_itr->cord_y, *&enemys_itr->sprite_x, *&enemys_itr->sprite_y - 65,
+					main_hero.cord_x, main_hero.cord_y + main_hero.collisionOffset_y, main_hero.sprite_x, main_hero.sprite_y - main_hero.collisionOffset_y))
 				{
-					Enemys.erase(EnemysItr);
+					enemys.erase(enemys_itr);
 					heroJump(-14);
 					break;
 				}
 			}
 		}
 		//player x enemy collision and game end
-		else if (!Enemys.empty())
+		else if (!enemys.empty())
 		{
-			EnemysItr = Enemys.begin();
-			for (EnemysItr; EnemysItr != Enemys.end(); EnemysItr++)
+			enemys_itr = enemys.begin();
+			for (enemys_itr; enemys_itr != enemys.end(); enemys_itr++)
 			{
-				if (isRectCollision(*&EnemysItr->cord_x, *&EnemysItr->cord_y, *&EnemysItr->sprite_x, *&EnemysItr->sprite_y,
-					mainHero.cord_x, mainHero.cord_y, mainHero.sprite_x, mainHero.sprite_y))
+				if (isRectCollision(*&enemys_itr->cord_x, *&enemys_itr->cord_y, *&enemys_itr->sprite_x, *&enemys_itr->sprite_y,
+					main_hero.cord_x, main_hero.cord_y, main_hero.sprite_x, main_hero.sprite_y))
 				{
-					if (mainHero.isCollisionOn)
+					if (main_hero.isCollisionOn)
 					{
 						MyClose();
 					}
 					else
 					{
-						Enemys.erase(EnemysItr);
+						enemys.erase(enemys_itr);
 						break;
 					}
 				}
@@ -672,31 +673,31 @@ public:
 		}
 		
 		//player x fall out and game end
-		if (mainHero.cord_y + mainHero.collisionOffset_y > WindowHeight)
+		if (main_hero.cord_y + main_hero.collisionOffset_y > window_height)
 		{
 			MyClose();
 		}
 
 		//make game process smooth
-		int milliseconds_compensation = worldParams.targetFrameDelay - (getTickCount() - worldParams.prevTickCounter);
+		int milliseconds_compensation = world_params.targetFrameDelay - (getTickCount() - world_params.prevTickCounter);
 		if (milliseconds_compensation > 0)
 		{
 			sleep_for(milliseconds(milliseconds_compensation));
 		}
-		worldParams.prevTickCounter = getTickCount();
+		world_params.prevTickCounter = getTickCount();
 
-		if (worldParams.doExit)
+		if (world_params.doExit)
 		{
 			ShowGG();
 		}
 
-		return worldParams.doExit;
+		return world_params.doExit;
 	}
 
 	virtual void onMouseMove(int x, int y, int xrelative, int yrelative)
 	{
-		mainHero.mouse_x = x;
-		mainHero.mouse_y = y;
+		main_hero.mouse_x = x;
+		main_hero.mouse_y = y;
 		//mainHero.mouse_rel_x = xrelative;
 		//mainHero.mouse_rel_y = yrelative;
 	}
@@ -708,7 +709,7 @@ public:
 		case FRMouseButton::LEFT:
 			if (!isReleased)
 			{
-				spawnAmmo(mainHero.mouse_x, mainHero.mouse_y);
+				spawnAmmo(main_hero.mouse_x, main_hero.mouse_y);
 			}
 			break;
 		case FRMouseButton::MIDDLE:
@@ -731,27 +732,27 @@ public:
 		dummyEnemy.cord_x = x + 5;
 		dummyEnemy.cord_y = y - dummyEnemy.sprite_y - 5;
 
-		Enemys.push_back(dummyEnemy);
+		enemys.push_back(dummyEnemy);
 
 	}
 
 	void spawnAbility()
 	{
 		Ability dummyAbility;
-		int platformId = rand() % Platforms.size();
-		PlatformsItr = Platforms.begin();
+		int platformId = rand() % platforms.size();
+		platforms_itr = platforms.begin();
 		for (int i = 0; i < platformId; i++)
 		{
-			PlatformsItr++;
+			platforms_itr++;
 		}
 
-		dummyAbility.cord_x = *&PlatformsItr->cord_x + 20;
-		dummyAbility.cord_y = *&PlatformsItr->cord_y - 60;
+		dummyAbility.cord_x = *&platforms_itr->cord_x + 20;
+		dummyAbility.cord_y = *&platforms_itr->cord_y - 60;
 		dummyAbility.type = static_cast<AbilityType>(rand() % (int)AbilityType::COUNT);
 
 		dummyAbility.sprite = res.abilities[(int)AbilityType::AUTO_SHOOT];
 
-		Abilitys.push_back(dummyAbility);
+		abilitys.push_back(dummyAbility);
 	}
 
 	void spawnPlatform(bool isRandomPosition = true, int x = 0, int y = 0,
@@ -760,11 +761,11 @@ public:
 		Platform dummyPlatform;
 
 		//id inc
-		if (Platforms.size() > 0)
+		if (platforms.size() > 0)
 		{
-			PlatformsItr = Platforms.end();
-			PlatformsItr--;
-			dummyPlatform.id = PlatformsItr->id++;
+			platforms_itr = platforms.end();
+			platforms_itr--;
+			dummyPlatform.id = platforms_itr->id++;
 		}
 		else
 		{
@@ -774,8 +775,8 @@ public:
 		//position
 		if (isRandomPosition)
 		{
-			dummyPlatform.cord_x = rand() % WindowWidth;
-			if (dummyPlatform.cord_x > WindowWidth - 80)
+			dummyPlatform.cord_x = rand() % window_width;
+			if (dummyPlatform.cord_x > window_width - 80)
 			{
 				dummyPlatform.cord_x -= 80;
 			}
@@ -837,7 +838,7 @@ public:
 			break;
 		}
 
-		Platforms.push_back(dummyPlatform);
+		platforms.push_back(dummyPlatform);
 	}
 
 	void spawnAmmo(int targetX, int targetY)
@@ -845,8 +846,8 @@ public:
 		Ammo ammoDummy;
 		ammoDummy.sprite = res.spriteAmmo;
 
-		ammoDummy.cord_x = mainHero.cord_x + mainHero.bulletOffset;
-		ammoDummy.cord_y = mainHero.cord_y + mainHero.bulletOffset;
+		ammoDummy.cord_x = main_hero.cord_x + main_hero.bulletOffset;
+		ammoDummy.cord_y = main_hero.cord_y + main_hero.bulletOffset;
 		float v2x = (targetX - ammoDummy.cord_x);
 		float v2y = (targetY - ammoDummy.cord_y);
 		float magn = sqrt((v2x * v2x) + (v2y * v2y));
@@ -855,7 +856,7 @@ public:
 		ammoDummy.speed_x = ammoDummy.unit_vector_x * ammoDummy.basicSpeed;
 		ammoDummy.speed_y = ammoDummy.unit_vector_y * ammoDummy.basicSpeed;
 
-		Ammos.push_back(ammoDummy);
+		ammos.push_back(ammoDummy);
 	}
 
 	void spawnHole(int x, int y)
@@ -865,28 +866,28 @@ public:
 		dummyHole.cord_x += 5;
 		dummyHole.cord_y -= 100;
 
-		Holes.push_back(dummyHole);
+		holes.push_back(dummyHole);
 	}
 
 	void startWorldCtr()
 	{
-		spawnPlatform(false, WindowWidth / 2, WindowHeight - worldParams.bottomOffset + 50, false, PlatformType::REGULAR);
-		int y = worldParams.bottomOffset - 100;
-		while (WindowHeight - y > 0)
+		spawnPlatform(false, window_width / 2, window_height - world_params.bottomOffset + 50, false, PlatformType::REGULAR);
+		int y = world_params.bottomOffset - 100;
+		while (window_height - y > 0)
 		{
-			spawnPlatform(false, WindowWidth / 2 - 150, WindowHeight - y, false, PlatformType::REGULAR);
+			spawnPlatform(false, window_width / 2 - 150, window_height - y, false, PlatformType::REGULAR);
 			y += 100;
 		}
-		spawnPlatform(false, WindowWidth / 2 - 150, WindowHeight - y, false, PlatformType::BOOST);
-		spawnHole(100, 600);
+		spawnPlatform(false, window_width / 2 - 150, window_height - y, false, PlatformType::BOOST);
+		spawnHole(500, 300);
 	}
 
 	void heroJump(int jumpBoost)
 	{
-		mainHero.verticalCurrentTickTimer = mainHero.verticalBasicTickTimer;
-		mainHero.verticalCurrentMovementSpeed = jumpBoost;
-		mainHero.jumpCounter++;
-		if (mainHero.jumpCounter % mainHero.jumpsToSpawnAbility == 0)
+		main_hero.verticalCurrentTickTimer = main_hero.verticalBasicTickTimer;
+		main_hero.verticalCurrentMovementSpeed = jumpBoost;
+		main_hero.jumpCounter++;
+		if (main_hero.jumpCounter % main_hero.jumpsToSpawnAbility == 0)
 		{
 			spawnAbility();
 		}
@@ -897,27 +898,24 @@ public:
 		switch (k)
 		{
 		case FRKey::RIGHT:
-			mainHero.rightPressed = true;
-			if (mainHero.moveState == HeroMoveState::IDLE)
+			main_hero.rightPressed = true;
+			if (main_hero.moveState == HeroMoveState::IDLE)
 			{
-				mainHero.moveState = HeroMoveState::RIGHT;
+				main_hero.moveState = HeroMoveState::RIGHT;
 			}
 			break;
 		case FRKey::LEFT:
-			mainHero.leftPressed = true;
-			if (mainHero.moveState == HeroMoveState::IDLE)
+			main_hero.leftPressed = true;
+			if (main_hero.moveState == HeroMoveState::IDLE)
 			{
-				mainHero.moveState = HeroMoveState::LEFT;
+				main_hero.moveState = HeroMoveState::LEFT;
 			}
 			break;
 		case FRKey::DOWN:
-			runAgain = false;
-			worldParams.doExit = true;
+			run_again = false;
+			world_params.doExit = true;
 			break;
 		case FRKey::UP:
-			worldParams.isDebug = !worldParams.isDebug;
-			loadSprites(worldParams.isDebug);
-			Log("Debug mod is: " + to_string(worldParams.isDebug));
 			break;
 		default:
 			break;
@@ -929,30 +927,30 @@ public:
 		switch (k)
 		{
 		case FRKey::RIGHT:
-			mainHero.rightPressed = false;
-			if (mainHero.moveState == HeroMoveState::RIGHT)
+			main_hero.rightPressed = false;
+			if (main_hero.moveState == HeroMoveState::RIGHT)
 			{
-				if (mainHero.leftPressed)
+				if (main_hero.leftPressed)
 				{
-					mainHero.moveState = HeroMoveState::LEFT;
+					main_hero.moveState = HeroMoveState::LEFT;
 				}
 				else
 				{
-					mainHero.moveState = HeroMoveState::IDLE;
+					main_hero.moveState = HeroMoveState::IDLE;
 				}
 			}
 			break;
 		case FRKey::LEFT:
-			mainHero.leftPressed = false;
-			if (mainHero.moveState == HeroMoveState::LEFT)
+			main_hero.leftPressed = false;
+			if (main_hero.moveState == HeroMoveState::LEFT)
 			{
-				if (mainHero.rightPressed)
+				if (main_hero.rightPressed)
 				{
-					mainHero.moveState = HeroMoveState::RIGHT;
+					main_hero.moveState = HeroMoveState::RIGHT;
 				}
 				else
 				{
-					mainHero.moveState = HeroMoveState::IDLE;
+					main_hero.moveState = HeroMoveState::IDLE;
 				}
 			}
 			break;
@@ -990,7 +988,7 @@ int main(int argc, char* argv[]) // game -window 800x600
 	string input;
 	int w = 600, h = 800;
 
-	/*cout << "Input game window Width (recommended 600): ";
+	cout << "Input game window Width (recommended 600): ";
 	getline(std::cin, input);
 
 	while (!tryParse(input, w))
@@ -1006,11 +1004,11 @@ int main(int argc, char* argv[]) // game -window 800x600
 	{
 		std::cout << "Bad entry. Enter a NUMBER (recommended 800): ";
 		getline(std::cin, input);
-	}*/
+	}
 
-	while (runAgain)
+	while (run_again)
 	{
-		run(new Game(w, h));
+		run(new game(w, h));
 	}
 
 	return 0;

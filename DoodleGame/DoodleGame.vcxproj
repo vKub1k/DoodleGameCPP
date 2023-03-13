@@ -138,12 +138,17 @@
     <ClCompile Include="DoodleGame.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Ammo.h" />
     <ClInclude Include="Assets.h" />
+    <ClInclude Include="Background.h" />
+    <ClInclude Include="Enemy.h" />
     <ClInclude Include="Enums.h" />
     <ClInclude Include="GameObject.h" />
+    <ClInclude Include="Ability.h" />
     <ClInclude Include="Hero.h" />
     <ClInclude Include="Hole.h" />
     <ClInclude Include="MyStructures.h" />
+    <ClInclude Include="Platform.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="WorldParams.h" />
   </ItemGroup>
