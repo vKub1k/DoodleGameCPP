@@ -14,6 +14,9 @@
 #include "MyStructures.h"
 #include "Hero.h"
 #include "Enums.h"
+#include "Assets.h"
+#include "WorldParams.h"
+#include "Hole.h"
 
 
 using namespace std;
@@ -45,6 +48,9 @@ public:
 
 	list<Ability> Abilitys;
 	list<Ability>::iterator AbilitysItr;
+
+	list<Hole> Holes;
+	list<Hole>::iterator HolesItr;
 	
 
 	Game(int windowWidth, int windowHeight)
@@ -109,6 +115,9 @@ public:
 		res.spritePlarfotmReg = createSprite(absPath(pathStart + "p_regular.png"));
 		res.spritePlarfotmBoost = createSprite(absPath(pathStart + "p_boost.png"));
 		res.spritePlarfotmEnemy = createSprite(absPath(pathStart + "p_enemy.png"));
+		res.spritePlarfotmHole = createSprite(absPath(pathStart + "p_hole.png"));
+		res.spritePlarfotmMove = createSprite(absPath(pathStart + "p_move.png"));
+		res.spritePlarfotmOneTouch = createSprite(absPath(pathStart + "p_onetouch.png"));
 
 		//res load ammo sprite
 		res.spriteAmmo = createSprite(absPath(pathStart + "ammo.png"));
@@ -118,6 +127,10 @@ public:
 
 		//res load gg
 		res.spriteGG = createSprite(absPath(pathStart + "gg.png"));
+
+		//res load holes
+		res.spriteWhiteHole = createSprite(absPath(pathStart + "whitehole.png"));
+		res.spriteBlackHole = createSprite(absPath(pathStart + "blackhole.png"));
 	}
 
 	virtual bool Init()
@@ -266,6 +279,15 @@ public:
 				drawSprite(a.sprite, a.cord_x, a.cord_y);
 			}
 		}
+
+		//scroll holes
+		if (!Holes.empty())
+		{
+			for (Hole& h : Holes)
+			{
+				drawSprite(h.sprite, h.cord_x, h.cord_y);
+			}
+		}
 		
 		//render hero
 		drawSprite(mainHero.sprite, mainHero.cord_x, mainHero.cord_y);
@@ -275,54 +297,65 @@ public:
 		drawUiNumber(worldParams.platformDeletedUi, worldParams.platformDeletedUiLenght, 6, 44);
 	}
 
+	void Scroll()
+	{
+		//world scroll
+		worldParams.traveledDistance -= mainHero.verticalCurrentMovementSpeed;
+		calculateUiNumber(worldParams.traveledDistanceUi, worldParams.traveledDistanceUiLenght, worldParams.traveledDistance);
+		//scroll platforms
+		for (Platform& p : Platforms)
+		{
+			p.cord_y -= mainHero.verticalCurrentMovementSpeed;
+		}
+		//scroll ammo
+		if (Ammos.size() > 0)
+		{
+			for (Ammo& a : Ammos)
+			{
+				a.cord_y -= mainHero.verticalCurrentMovementSpeed;
+			}
+		}
+		//scroll enemys
+		if (Enemys.size() > 0)
+		{
+			for (Enemy& e : Enemys)
+			{
+				e.cord_y -= mainHero.verticalCurrentMovementSpeed;
+			}
+		}
+
+		//scroll abilities
+		if (Abilitys.size() > 0)
+		{
+			for (Ability& a : Abilitys)
+			{
+				a.cord_y -= mainHero.verticalCurrentMovementSpeed;
+			}
+		}
+
+		//scroll holes
+		if (!Holes.empty())
+		{
+			for (Hole& h : Holes)
+			{
+				h.cord_y -= mainHero.verticalCurrentMovementSpeed;
+			}
+		}
+	}
+
 	virtual bool Tick()
 	{
 		//vertical logic
 		if (mainHero.cord_y <= worldParams.cameraYLimit && mainHero.verticalCurrentMovementSpeed < 0)
 		{
-			//world scroll
-			worldParams.traveledDistance -= mainHero.verticalCurrentMovementSpeed;
-			calculateUiNumber(worldParams.traveledDistanceUi, worldParams.traveledDistanceUiLenght, worldParams.traveledDistance);
-			//scroll platforms
-			for (Platform &p : Platforms)
-			{
-				p.cord_y -= mainHero.verticalCurrentMovementSpeed;
-			}
-			//scroll ammo
-			if (Ammos.size() > 0)
-			{
-				for (Ammo& a : Ammos)
-				{
-					a.cord_y -= mainHero.verticalCurrentMovementSpeed;
-				}
-			}
-			//scroll enemys
-			if (Enemys.size() > 0)
-			{
-				for (Enemy& e : Enemys)
-				{
-					e.cord_y -= mainHero.verticalCurrentMovementSpeed;
-				}
-			}
-
-			//scroll abilities
-			if (Abilitys.size() > 0)
-			{
-				for (Ability& a : Abilitys)
-				{
-					a.cord_y -= mainHero.verticalCurrentMovementSpeed;
-				}
-			}
+			Scroll();
 		}
 		else
 		{
-			mainHero.cord_y += mainHero.verticalCurrentMovementSpeed;
+			mainHero.cord_y += mainHero.verticalCurrentMovementSpeed + mainHero.passive_force_y;
 		}
 
-
-
-
-		//horizontal logic
+		//horizontal hero movement
 		switch (mainHero.moveState)
 		{
 		case HeroMoveState::LEFT:
@@ -337,6 +370,15 @@ public:
 			break;
 		default:
 			break;
+		}
+		//hero teleport on edge touch
+		if (mainHero.cord_x < 0 - mainHero.teleportOffset)
+		{
+			mainHero.cord_x = WindowWidth - (mainHero.sprite_x - mainHero.teleportOffset);
+		}
+		else if (mainHero.cord_x > WindowWidth - (mainHero.sprite_x - mainHero.teleportOffset))
+		{
+			mainHero.cord_x = 0 - mainHero.teleportOffset;
 		}
 
 		//jump tick logic
@@ -372,17 +414,7 @@ public:
 			}
 		}
 
-		//hero teleport on edge touch
-		if (mainHero.cord_x < 0 - mainHero.teleportOffset)
-		{
-			mainHero.cord_x = WindowWidth - (mainHero.sprite_x - mainHero.teleportOffset);
-		}
-		else if (mainHero.cord_x > WindowWidth - (mainHero.sprite_x - mainHero.teleportOffset))
-		{
-			mainHero.cord_x = 0 - mainHero.teleportOffset;
-		}
-
-		//logic with bullets
+		//move ammo
 		if (Ammos.size() > 0)
 		{
 			for (Ammo& a : Ammos)
@@ -410,7 +442,7 @@ public:
 		}
 
 		//player x platform collision
-		if (mainHero.verticalCurrentMovementSpeed >= 0 && mainHero.isCollisionOn)
+		if (mainHero.verticalCurrentMovementSpeed >= 0)
 		{
 			for (Platform& p : Platforms)
 			{
@@ -422,6 +454,37 @@ public:
 						mainHero.biggestPlatformId = p.id;
 					}
 					heroJump(p.jumpBoost);
+				}
+			}
+		}
+
+		//player x holes collision
+		if (!Holes.empty())
+		{
+			int tmpHero_x = mainHero.cord_x + mainHero.sprite_x / 2;
+			int tmpHero_y = mainHero.cord_y + mainHero.sprite_y / 2;
+			for (Hole& h : Holes)
+			{
+				int tmpHole_x = h.cord_x + h.sprite_x / 2;
+				int tmpHole_y = h.cord_y + h.sprite_y / 2;
+				int delta_x = tmpHero_x - tmpHole_x;
+				int delta_y = tmpHero_y - tmpHole_y;
+				int distance = sqrt((delta_x* delta_x) + (delta_y * delta_y));
+				Log(distance);
+				int power = h.field_radius - distance;
+				if (power > 0)
+				{
+					Log("PUSH");
+					int power = h.field_radius - distance;
+					float unit_vector_x = delta_x / distance;
+					float unit_vector_y = delta_y / distance;
+					float power_x = (power * unit_vector_x * h.holeDirection) / h.powerModifier;
+					float power_y = (power * unit_vector_y * h.holeDirection) / h.powerModifier;
+
+					mainHero.passive_force_x = power_x;
+					mainHero.cord_x += mainHero.passive_force_x;
+
+					mainHero.passive_force_y = power_y;
 				}
 			}
 		}
@@ -465,7 +528,7 @@ public:
 			}
 		}
 
-		//platform x garbage collector collision and spawning new platforms
+		//platform clean up and spawning new platforms
 		if (Platforms.size() > 0)
 		{
 			PlatformsItr = Platforms.begin();
@@ -486,7 +549,7 @@ public:
 			}
 		}
 
-		//platform x garbage collector collision and spawning new platforms
+		//ammo clean up
 		if (Ammos.size() > 0)
 		{
 			AmmosItr = Ammos.begin();
@@ -500,7 +563,7 @@ public:
 			}
 		}
 
-		//platform x garbage collector collision and spawning new platforms
+		//enemy clean up
 		if (Enemys.size() > 0)
 		{
 			EnemysItr = Enemys.begin();
@@ -509,6 +572,24 @@ public:
 				if (*&EnemysItr->cord_y > WindowHeight)
 				{
 					Enemys.erase(EnemysItr);
+					break;
+				}
+				else
+				{
+					break;
+				}
+			}
+		}
+
+		//holes clean up
+		if (Holes.size() > 0)
+		{
+			HolesItr = Holes.begin();
+			for (HolesItr; HolesItr != Holes.end(); HolesItr++)
+			{
+				if (*&HolesItr->cord_y > WindowHeight)
+				{
+					Holes.erase(HolesItr);
 					break;
 				}
 				else
@@ -549,12 +630,12 @@ public:
 			}
 		}
 
-		//render all sprites
+		//render all game objects
 		Render();
 
-		//all close cases
+		//all game over cases
 		//player x enemy top collision and enemy kill
-		if (mainHero.verticalCurrentMovementSpeed >= 0 && mainHero.isCollisionOn && !Enemys.empty())
+		if (mainHero.verticalCurrentMovementSpeed >= 0 && !Enemys.empty())
 		{
 			EnemysItr = Enemys.begin();
 			for (EnemysItr; EnemysItr != Enemys.end(); EnemysItr++)
@@ -571,14 +652,21 @@ public:
 		//player x enemy collision and game end
 		else if (!Enemys.empty())
 		{
-			for (Enemy& e : Enemys)
+			EnemysItr = Enemys.begin();
+			for (EnemysItr; EnemysItr != Enemys.end(); EnemysItr++)
 			{
-				if (isRectCollision(
-					e.cord_x, e.cord_y, e.sprite_x, e.sprite_y,
-					mainHero.cord_x, mainHero.cord_y, mainHero.sprite_x, mainHero.sprite_y
-				))
+				if (isRectCollision(*&EnemysItr->cord_x, *&EnemysItr->cord_y, *&EnemysItr->sprite_x, *&EnemysItr->sprite_y,
+					mainHero.cord_x, mainHero.cord_y, mainHero.sprite_x, mainHero.sprite_y))
 				{
-					MyClose();
+					if (mainHero.isCollisionOn)
+					{
+						MyClose();
+					}
+					else
+					{
+						Enemys.erase(EnemysItr);
+						break;
+					}
 				}
 			}
 		}
@@ -667,7 +755,7 @@ public:
 	}
 
 	void spawnPlatform(bool isRandomPosition = true, int x = 0, int y = 0,
-		bool isRandomType = true,PlatformType pType = PlatformType::REGULAR)
+		bool isRandomType = true, PlatformType pType = PlatformType::REGULAR)
 	{
 		Platform dummyPlatform;
 
@@ -702,18 +790,23 @@ public:
 		if (isRandomType)
 		{
 			int randValue = rand() % 100 + 1;
-			if (randValue <= 70)
+			if (randValue <= 65)
 			{
 				dummyPlatform.type = PlatformType::REGULAR;
 			}
-			else if (randValue <= 90)
+			else if (randValue <= 80)
 			{
 				dummyPlatform.type = PlatformType::BOOST;
 			}
-			else
+			else if (randValue <= 95)
 			{
 				dummyPlatform.type = PlatformType::ENEMY;
 				spawnEnemy(dummyPlatform.cord_x, dummyPlatform.cord_y);
+			}
+			else
+			{
+				dummyPlatform.type = PlatformType::HOLE;
+				spawnHole(dummyPlatform.cord_x, dummyPlatform.cord_y);
 			}
 		}
 		else
@@ -733,6 +826,10 @@ public:
 			break;
 		case PlatformType::ENEMY:
 			dummyPlatform.sprite = res.spritePlarfotmEnemy;
+			dummyPlatform.jumpBoost = -8;
+			break;
+		case PlatformType::HOLE:
+			dummyPlatform.sprite = res.spritePlarfotmHole;
 			dummyPlatform.jumpBoost = -8;
 			break;
 		default:
@@ -761,6 +858,16 @@ public:
 		Ammos.push_back(ammoDummy);
 	}
 
+	void spawnHole(int x, int y)
+	{
+		Hole dummyHole = Hole(x, y, res.spriteWhiteHole, 500, 1);
+
+		dummyHole.cord_x += 5;
+		dummyHole.cord_y -= 100;
+
+		Holes.push_back(dummyHole);
+	}
+
 	void startWorldCtr()
 	{
 		spawnPlatform(false, WindowWidth / 2, WindowHeight - worldParams.bottomOffset + 50, false, PlatformType::REGULAR);
@@ -771,6 +878,7 @@ public:
 			y += 100;
 		}
 		spawnPlatform(false, WindowWidth / 2 - 150, WindowHeight - y, false, PlatformType::BOOST);
+		spawnHole(100, 600);
 	}
 
 	void heroJump(int jumpBoost)
