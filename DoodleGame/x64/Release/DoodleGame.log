@@ -21,15 +21,15 @@ D:\DoodleGame\DoodleGame\DoodleGame.cpp(527,15): warning C4244: 'initializing': 
 D:\DoodleGame\DoodleGame\DoodleGame.cpp(530,16): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
 D:\DoodleGame\DoodleGame\DoodleGame.cpp(551,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
 D:\DoodleGame\DoodleGame\DoodleGame.cpp(551,15): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-D:\DoodleGame\DoodleGame\DoodleGame.cpp(748,28): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-D:\DoodleGame\DoodleGame\DoodleGame.cpp(748,7): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-D:\DoodleGame\DoodleGame\DoodleGame.cpp(778,41): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-D:\DoodleGame\DoodleGame\DoodleGame.cpp(778,15): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-D:\DoodleGame\DoodleGame\DoodleGame.cpp(793,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-D:\DoodleGame\DoodleGame\DoodleGame.cpp(793,15): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+D:\DoodleGame\DoodleGame\DoodleGame.cpp(683,28): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+D:\DoodleGame\DoodleGame\DoodleGame.cpp(683,7): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+D:\DoodleGame\DoodleGame\DoodleGame.cpp(713,41): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+D:\DoodleGame\DoodleGame\DoodleGame.cpp(713,15): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+D:\DoodleGame\DoodleGame\DoodleGame.cpp(728,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+D:\DoodleGame\DoodleGame\DoodleGame.cpp(728,15): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
   Generating code
-  24 of 967 functions ( 2.5%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    8 functions had inline decision re-evaluated but remain unchanged
+  21 of 826 functions ( 2.5%) were compiled, the rest were copied from previous compilation.
+    13 functions were new in current compilation
+    25 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   DoodleGame.vcxproj -> D:\DoodleGame\x64\Release\DoodleGame.exe

@@ -149,7 +149,6 @@
     <ClInclude Include="Hole.h" />
     <ClInclude Include="MyStructures.h" />
     <ClInclude Include="Platform.h" />
-    <ClInclude Include="Timer.h" />
     <ClInclude Include="WorldParams.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

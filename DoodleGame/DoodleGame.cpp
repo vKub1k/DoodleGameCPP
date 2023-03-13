@@ -557,102 +557,37 @@ public:
 					switch (main_hero.activeAbility)
 					{
 					case AbilityType::AUTO_SHOOT:
-						main_hero.abilityTimer.setFunc([&]() {
-							if (!main_hero.abilityFirstRun)
-							{
-								main_hero.activeAbility = AbilityType::COUNT;
-								main_hero.sprite = res.spriteMainHero;
-								main_hero.abilityFirstRun = true;
-								main_hero.abilityTimer.stop();
-							}
-							else
-							{
-								main_hero.sprite = res.mainhero_abilities[(int)main_hero.activeAbility];
-								main_hero.abilityFirstRun = false;
-							}
-							})
-							->setInterval(20000)->start();
-							break;
+						main_hero.sprite = res.mainhero_abilities[(int)main_hero.activeAbility];
+						main_hero.ability_tick_stop = getTickCount() + 20000;
+						Log("AUTO SHOOT START!");
+						break;
 					case AbilityType::SLOW_MOTION:
-						main_hero.abilityTimer.setFunc([&]() {
-							if (!main_hero.abilityFirstRun)
-							{
-								main_hero.activeAbility = AbilityType::COUNT;
-								main_hero.sprite = res.spriteMainHero;
-								main_hero.abilityFirstRun = true;
-								world_params.fpsLimiter = 90;
-								world_params.targetFrameDelay = 1000 / world_params.fpsLimiter;
-								main_hero.abilityTimer.stop();
-							}
-							else
-							{
-								world_params.fpsLimiter = 45;
-								world_params.targetFrameDelay = 1000 / world_params.fpsLimiter;
-								main_hero.sprite = res.mainhero_abilities[(int)main_hero.activeAbility];
-								main_hero.abilityFirstRun = false;
-							}
-							})
-							->setInterval(10000)->start();
-							break;
+						world_params.fpsLimiter = 45;
+						world_params.targetFrameDelay = 1000 / world_params.fpsLimiter;
+						main_hero.sprite = res.mainhero_abilities[(int)main_hero.activeAbility];
+						main_hero.ability_tick_stop = getTickCount() + 10000;
+						Log("SLOW Start!");
+						break;
 					case AbilityType::SHIELD:
-						main_hero.abilityTimer.setFunc([&]() {
-							if (!main_hero.abilityFirstRun)
-							{
-								main_hero.activeAbility = AbilityType::COUNT;
-								main_hero.sprite = res.spriteMainHero;
-								main_hero.abilityFirstRun = true;
-								main_hero.isCollisionOn = true;
-								main_hero.abilityTimer.stop();
-							}
-							else
-							{
-								main_hero.isCollisionOn = false;
-								main_hero.sprite = res.mainhero_abilities[(int)main_hero.activeAbility];
-								main_hero.abilityFirstRun = false;
-							}
-							})
-							->setInterval(20000)->start();
-							break;
+						main_hero.isCollisionOn = false;
+						main_hero.sprite = res.mainhero_abilities[(int)main_hero.activeAbility];
+						main_hero.ability_tick_stop = getTickCount() + 20000;
+						Log("SH Start!");
+						break;
 					case AbilityType::JETPACK:
-						main_hero.abilityTimer.setFunc([&]() {
-							if (!main_hero.abilityFirstRun)
-							{
-								main_hero.activeAbility = AbilityType::COUNT;
-								main_hero.sprite = res.spriteMainHero;
-								main_hero.abilityFirstRun = true;
-								main_hero.isCollisionOn = true;
-								main_hero.abilityTimer.stop();
-							}
-							else
-							{
-								main_hero.isCollisionOn = false;
-								main_hero.verticalCurrentMovementSpeed = -8;
-								main_hero.sprite = res.mainhero_abilities[(int)main_hero.activeAbility];
-								main_hero.abilityFirstRun = false;
-							}
-							})
-							->setInterval(3000)->start();
-							break;
+						main_hero.isCollisionOn = false;
+						main_hero.verticalCurrentMovementSpeed = -8;
+						main_hero.sprite = res.mainhero_abilities[(int)main_hero.activeAbility];
+						main_hero.ability_tick_stop = getTickCount() + 5000;
+						Log("JET Start!");
+						break;
 					case AbilityType::ROCKET:
-						main_hero.abilityTimer.setFunc([&]() {
-							if (!main_hero.abilityFirstRun)
-							{
-								main_hero.activeAbility = AbilityType::COUNT;
-								main_hero.sprite = res.spriteMainHero;
-								main_hero.abilityFirstRun = true;
-								main_hero.isCollisionOn = true;
-								main_hero.abilityTimer.stop();
-							}
-							else
-							{
-								main_hero.isCollisionOn = false;
-								main_hero.verticalCurrentMovementSpeed = -8;
-								main_hero.sprite = res.mainhero_abilities[(int)main_hero.activeAbility];
-								main_hero.abilityFirstRun = false;
-							}
-							})
-							->setInterval(8000)->start();
-							break;
+						main_hero.isCollisionOn = false;
+						main_hero.verticalCurrentMovementSpeed = -8;
+						main_hero.sprite = res.mainhero_abilities[(int)main_hero.activeAbility];
+						main_hero.ability_tick_stop = getTickCount() + 10000;
+						Log("ROCK Start!");
+						break;
 					default:
 						break;
 					}
@@ -818,6 +753,49 @@ public:
 			sleep_for(milliseconds(milliseconds_compensation));
 		}
 		world_params.prevTickCounter = getTickCount();
+
+		//turn off abilities
+		if (main_hero.activeAbility != AbilityType::COUNT)
+		{
+			if (world_params.prevTickCounter > main_hero.ability_tick_stop)
+			{
+				switch (main_hero.activeAbility)
+				{
+				case AbilityType::AUTO_SHOOT:
+					main_hero.activeAbility = AbilityType::COUNT;
+					main_hero.sprite = res.spriteMainHero;
+					Log("AUTO SHOOT STOP!");
+					break;
+				case AbilityType::SLOW_MOTION:
+					main_hero.activeAbility = AbilityType::COUNT;
+					main_hero.sprite = res.spriteMainHero;
+					world_params.fpsLimiter = 90;
+					world_params.targetFrameDelay = 1000 / world_params.fpsLimiter;
+					Log("SLOW MO STOP!");
+					break;
+				case AbilityType::SHIELD:
+					main_hero.activeAbility = AbilityType::COUNT;
+					main_hero.sprite = res.spriteMainHero;
+					main_hero.isCollisionOn = true;
+					Log("SHIELD STOP!");
+					break;
+				case AbilityType::JETPACK:
+					main_hero.activeAbility = AbilityType::COUNT;
+					main_hero.sprite = res.spriteMainHero;
+					main_hero.isCollisionOn = true;
+					Log("JETPACK STOP!");
+					break;
+				case AbilityType::ROCKET:
+					main_hero.activeAbility = AbilityType::COUNT;
+					main_hero.sprite = res.spriteMainHero;
+					main_hero.isCollisionOn = true;
+					Log("ROCKET STOP!");
+					break;
+				default:
+					break;
+				}
+			}
+		}
 
 		if (world_params.doExit)
 		{
@@ -1150,7 +1128,7 @@ int main(int argc, char* argv[]) // game -window 800x600
 	string input;
 	int w = 600, h = 800;
 
-	/*cout << "Input game window Width (recommended 600): ";
+	cout << "Input game window Width (recommended 600): ";
 	getline(std::cin, input);
 
 	while (!tryParse(input, w))
@@ -1166,7 +1144,7 @@ int main(int argc, char* argv[]) // game -window 800x600
 	{
 		std::cout << "Bad entry. Enter a NUMBER (recommended 800): ";
 		getline(std::cin, input);
-	}*/
+	}
 
 	while (run_again)
 	{

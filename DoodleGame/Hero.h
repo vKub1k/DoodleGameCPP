@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Enums.h"
-#include "Timer.h"
 
 using namespace std;
 
@@ -38,11 +37,10 @@ struct Hero {
 	int bulletOffset = 0;
 
 	unsigned int jumpCounter = 0;
-	int jumpsToSpawnAbility = 2;
+	int jumpsToSpawnAbility = 50;
 
 	AbilityType activeAbility = AbilityType::COUNT;
-	Timer abilityTimer{};
-	bool abilityFirstRun = true;
+	unsigned int ability_tick_stop = 0;
 
 	bool isCollisionOn = true;
 
