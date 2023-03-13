@@ -9,10 +9,10 @@ enum class HeroMoveState {
 
 enum class AbilityType {
 	AUTO_SHOOT,
-	//JETPACK,
-	//ROCKET,
-	//SHIELD,
-	//SLOW_MOTION,
+	JETPACK,
+	ROCKET,
+	SHIELD,
+	SLOW_MOTION,
 	COUNT
 };
 
@@ -21,7 +21,7 @@ enum class PlatformType {
 	BOOST,
 	ENEMY,
 	HOLE,
-	//MOVE,
-	//ONETOUCH,
+	MOVE,
+	ONETOUCH,
 	COUNT
 };

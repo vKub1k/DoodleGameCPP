@@ -9,7 +9,7 @@ public:
 	int holeDirection;
 	float powerModifier;
 
-	Hole(int x, int y, Sprite* s, int radius, int dir, float mod = 50)
+	Hole(int x, int y, Sprite* s, int radius, int dir, float mod = 200)
 	{
 		cord_x = x;
 		cord_y = y;

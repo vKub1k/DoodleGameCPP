@@ -96,7 +96,8 @@ public:
 		{
 			pathStart = ".\\data\\debug\\";
 		}
-		main_hero.sprite = createSprite(abs_path(pathStart + "hero.png"));
+		res.spriteMainHero = createSprite(abs_path(pathStart + "hero\\hero.png"));
+		
 
 		//bg sprite load and cfg
 		bg.sprite = createSprite(abs_path(pathStart + "bg.png"));
@@ -127,6 +128,17 @@ public:
 
 		//res load abilities sprites
 		res.abilities[0] = createSprite(abs_path(pathStart + "ab\\autoshoot.png"));
+		res.abilities[1] = createSprite(abs_path(pathStart + "ab\\jetpack.png"));
+		res.abilities[2] = createSprite(abs_path(pathStart + "ab\\rocket.png"));
+		res.abilities[3] = createSprite(abs_path(pathStart + "ab\\shield.png"));
+		res.abilities[4] = createSprite(abs_path(pathStart + "ab\\slowmotion.png"));
+
+		//res load main hero states with abilities
+		res.mainhero_abilities[0] = createSprite(abs_path(pathStart + "hero\\hero_autoshoot.png"));
+		res.mainhero_abilities[1] = createSprite(abs_path(pathStart + "hero\\hero_jetpack.png"));
+		res.mainhero_abilities[2] = createSprite(abs_path(pathStart + "hero\\hero_rocket.png"));
+		res.mainhero_abilities[3] = createSprite(abs_path(pathStart + "hero\\hero_shield.png"));
+		res.mainhero_abilities[4] = createSprite(abs_path(pathStart + "hero\\hero_slowmotion.png"));
 
 		//res load gg
 		res.spriteGG = createSprite(abs_path(pathStart + "gg.png"));
@@ -139,7 +151,9 @@ public:
 	virtual bool Init()
 	{
 		loadSprites(world_params.isDebug);
+
 		//main hero params init
+		main_hero.sprite = res.spriteMainHero;
 		getSpriteSize(main_hero.sprite, main_hero.sprite_x, main_hero.sprite_y);
 		main_hero.teleportOffset = main_hero.sprite_x - 2;
 		//set start position for hero
@@ -298,6 +312,11 @@ public:
 		//render ui
 		drawUiNumber(world_params.traveledDistanceUi, world_params.traveledDistanceUiLenght, 6, 6);
 		drawUiNumber(world_params.platformDeletedUi, world_params.platformDeletedUiLenght, 6, 44);
+
+		if (main_hero.activeAbility != AbilityType::COUNT)
+		{
+			drawSprite(res.abilities[(int)main_hero.activeAbility], window_width - 50, window_height - 50);
+		}
 	}
 
 	void Scroll()
@@ -385,10 +404,13 @@ public:
 		}
 
 		//jump tick logic
-		if (--main_hero.verticalCurrentTickTimer == 0)
+		if (main_hero.activeAbility != AbilityType::JETPACK && main_hero.activeAbility != AbilityType::ROCKET)
 		{
-			main_hero.verticalCurrentMovementSpeed++;
-			main_hero.verticalCurrentTickTimer = main_hero.verticalBasicTickTimer;
+			if (--main_hero.verticalCurrentTickTimer == 0)
+			{
+				main_hero.verticalCurrentMovementSpeed++;
+				main_hero.verticalCurrentTickTimer = main_hero.verticalBasicTickTimer;
+			}
 		}
 
 		//ability check up
@@ -412,8 +434,33 @@ public:
 					}
 				}
 				break;
+			case AbilityType::SHIELD:
+				
+				break;
+			case AbilityType::SLOW_MOTION:
+
+				break;
+			case AbilityType::JETPACK:
+
+				break;
+			case AbilityType::ROCKET:
+
+				break;
 			default:
 				break;
+			}
+		}
+
+		//move plarform
+		for(Platform &p : platforms)
+		{
+			if (p.type == PlatformType::MOVE)
+			{
+				p.cord_x += p.horizontal_move;
+				if (p.cord_x <= 0 || p.cord_x >= window_width - p.sprite_x)
+				{
+					p.horizontal_move *= -1;
+				}
 			}
 		}
 
@@ -456,6 +503,10 @@ public:
 					{
 						main_hero.biggestPlatformId = p.id;
 					}
+					if (p.type == PlatformType::ONETOUCH)
+					{
+						p.cord_x += window_width * 2;
+					}
 					heroJump(p.jumpBoost);
 				}
 			}
@@ -472,9 +523,9 @@ public:
 				int tmpHole_y = h.cord_y + h.sprite_y / 2;
 				int delta_x = tmpHero_x - tmpHole_x;
 				int delta_y = tmpHero_y - tmpHole_y;
-				int distance = sqrt((delta_x* delta_x) + (delta_y * delta_y));
+				float distance = sqrt((delta_x* delta_x) + (delta_y * delta_y));
 				int power = h.field_radius - distance;
-				if (power > 0)
+				if (power > 0 && distance != 0)
 				{
 					int power = h.field_radius - distance;
 					float unit_vector_x = delta_x / distance;
@@ -510,16 +561,98 @@ public:
 							if (!main_hero.abilityFirstRun)
 							{
 								main_hero.activeAbility = AbilityType::COUNT;
+								main_hero.sprite = res.spriteMainHero;
 								main_hero.abilityFirstRun = true;
 								main_hero.abilityTimer.stop();
-								}
+							}
 							else
 							{
+								main_hero.sprite = res.mainhero_abilities[(int)main_hero.activeAbility];
 								main_hero.abilityFirstRun = false;
 							}
 							})
 							->setInterval(20000)->start();
-						break;
+							break;
+					case AbilityType::SLOW_MOTION:
+						main_hero.abilityTimer.setFunc([&]() {
+							if (!main_hero.abilityFirstRun)
+							{
+								main_hero.activeAbility = AbilityType::COUNT;
+								main_hero.sprite = res.spriteMainHero;
+								main_hero.abilityFirstRun = true;
+								world_params.fpsLimiter = 90;
+								world_params.targetFrameDelay = 1000 / world_params.fpsLimiter;
+								main_hero.abilityTimer.stop();
+							}
+							else
+							{
+								world_params.fpsLimiter = 45;
+								world_params.targetFrameDelay = 1000 / world_params.fpsLimiter;
+								main_hero.sprite = res.mainhero_abilities[(int)main_hero.activeAbility];
+								main_hero.abilityFirstRun = false;
+							}
+							})
+							->setInterval(10000)->start();
+							break;
+					case AbilityType::SHIELD:
+						main_hero.abilityTimer.setFunc([&]() {
+							if (!main_hero.abilityFirstRun)
+							{
+								main_hero.activeAbility = AbilityType::COUNT;
+								main_hero.sprite = res.spriteMainHero;
+								main_hero.abilityFirstRun = true;
+								main_hero.isCollisionOn = true;
+								main_hero.abilityTimer.stop();
+							}
+							else
+							{
+								main_hero.isCollisionOn = false;
+								main_hero.sprite = res.mainhero_abilities[(int)main_hero.activeAbility];
+								main_hero.abilityFirstRun = false;
+							}
+							})
+							->setInterval(20000)->start();
+							break;
+					case AbilityType::JETPACK:
+						main_hero.abilityTimer.setFunc([&]() {
+							if (!main_hero.abilityFirstRun)
+							{
+								main_hero.activeAbility = AbilityType::COUNT;
+								main_hero.sprite = res.spriteMainHero;
+								main_hero.abilityFirstRun = true;
+								main_hero.isCollisionOn = true;
+								main_hero.abilityTimer.stop();
+							}
+							else
+							{
+								main_hero.isCollisionOn = false;
+								main_hero.verticalCurrentMovementSpeed = -8;
+								main_hero.sprite = res.mainhero_abilities[(int)main_hero.activeAbility];
+								main_hero.abilityFirstRun = false;
+							}
+							})
+							->setInterval(3000)->start();
+							break;
+					case AbilityType::ROCKET:
+						main_hero.abilityTimer.setFunc([&]() {
+							if (!main_hero.abilityFirstRun)
+							{
+								main_hero.activeAbility = AbilityType::COUNT;
+								main_hero.sprite = res.spriteMainHero;
+								main_hero.abilityFirstRun = true;
+								main_hero.isCollisionOn = true;
+								main_hero.abilityTimer.stop();
+							}
+							else
+							{
+								main_hero.isCollisionOn = false;
+								main_hero.verticalCurrentMovementSpeed = -8;
+								main_hero.sprite = res.mainhero_abilities[(int)main_hero.activeAbility];
+								main_hero.abilityFirstRun = false;
+							}
+							})
+							->setInterval(8000)->start();
+							break;
 					default:
 						break;
 					}
@@ -750,7 +883,7 @@ public:
 		dummyAbility.cord_y = *&platforms_itr->cord_y - 60;
 		dummyAbility.type = static_cast<AbilityType>(rand() % (int)AbilityType::COUNT);
 
-		dummyAbility.sprite = res.abilities[(int)AbilityType::AUTO_SHOOT];
+		dummyAbility.sprite = res.abilities[(int)dummyAbility.type];
 
 		abilitys.push_back(dummyAbility);
 	}
@@ -791,13 +924,21 @@ public:
 		if (isRandomType)
 		{
 			int randValue = rand() % 100 + 1;
-			if (randValue <= 65)
+			if (randValue <= 40)
 			{
 				dummyPlatform.type = PlatformType::REGULAR;
 			}
-			else if (randValue <= 80)
+			else if (randValue <= 60)
+			{
+				dummyPlatform.type = PlatformType::MOVE;
+			}
+			else if (randValue <= 75)
 			{
 				dummyPlatform.type = PlatformType::BOOST;
+			}
+			else if (randValue <= 85)
+			{
+				dummyPlatform.type = PlatformType::ONETOUCH;
 			}
 			else if (randValue <= 95)
 			{
@@ -833,6 +974,19 @@ public:
 			dummyPlatform.sprite = res.spritePlarfotmHole;
 			dummyPlatform.jumpBoost = -8;
 			break;
+		case PlatformType::ONETOUCH:
+			dummyPlatform.sprite = res.spritePlarfotmOneTouch;
+			dummyPlatform.jumpBoost = -8;
+			break;
+		case PlatformType::MOVE:
+			dummyPlatform.sprite = res.spritePlarfotmMove;
+			dummyPlatform.jumpBoost = -8;
+			dummyPlatform.horizontal_move = -3 + rand() % 4;
+			if (dummyPlatform.horizontal_move == 0)
+			{
+				dummyPlatform.horizontal_move = 1;
+			}
+			break;
 		default:
 			Log("!!!Error on plarform type choosing!!!");
 			break;
@@ -861,7 +1015,15 @@ public:
 
 	void spawnHole(int x, int y)
 	{
-		Hole dummyHole = Hole(x, y, res.spriteWhiteHole, 500, 1);
+		int randomDirection = 1;
+		Sprite* randSprite = res.spriteWhiteHole;
+		if (rand() % 2 == 0)
+		{
+			randomDirection = -1;
+			randSprite = res.spriteBlackHole;
+		}
+
+		Hole dummyHole = Hole(x, y, randSprite, 400 + rand() % 200, randomDirection);
 
 		dummyHole.cord_x += 5;
 		dummyHole.cord_y -= 100;
@@ -875,11 +1037,11 @@ public:
 		int y = world_params.bottomOffset - 100;
 		while (window_height - y > 0)
 		{
-			spawnPlatform(false, window_width / 2 - 150, window_height - y, false, PlatformType::REGULAR);
+			spawnPlatform(false, window_width / 2 - 150, window_height - y, false, PlatformType::ONETOUCH);
 			y += 100;
 		}
 		spawnPlatform(false, window_width / 2 - 150, window_height - y, false, PlatformType::BOOST);
-		spawnHole(500, 300);
+		//spawnHole(500, 300);
 	}
 
 	void heroJump(int jumpBoost)
@@ -988,7 +1150,7 @@ int main(int argc, char* argv[]) // game -window 800x600
 	string input;
 	int w = 600, h = 800;
 
-	cout << "Input game window Width (recommended 600): ";
+	/*cout << "Input game window Width (recommended 600): ";
 	getline(std::cin, input);
 
 	while (!tryParse(input, w))
@@ -1004,7 +1166,7 @@ int main(int argc, char* argv[]) // game -window 800x600
 	{
 		std::cout << "Bad entry. Enter a NUMBER (recommended 800): ";
 		getline(std::cin, input);
-	}
+	}*/
 
 	while (run_again)
 	{

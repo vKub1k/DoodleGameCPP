@@ -14,4 +14,5 @@ struct Platform
 
 	PlatformType type = PlatformType::REGULAR;
 	int jumpBoost = 0;
+	int horizontal_move = 0;
 };
